@@ -1,0 +1,24 @@
+objects:
+  ["CrackerBox", "TunaFishCan", "TomatoSoupCan", "JelloBox", "Pear", "Lemon", "JellOStrawberryBox","Apple",
+   "Strawberry", "MustardBottle", "CoffeeCan", "Banana", "MilkPack", "CerealBox", "Bowl", "Spoon"]
+
+positions:
+  first: [2.30, -0.4]
+  second: [2.55, -0.4]
+  third: [2.75, -0.4]
+  forth: [2.97, -0.4]
+
+position_of_interest: [2.6, -0.5, 0.75]
+
+locations:
+  first: [2.7, -1.9, 1.2]
+  second: [2.7, -1.9, 1.0]
+  third: [2.7, -2.9, 1.2]
+  forth: [2.7, -2.9, 1.0]
+  fifth: [2.7, -2.4, 1.6]
+  sixth: [2.1, -1.9, 1.2]
+  seventh: [2.1, -1.9, 1.0]
+  eigth: [3.1, -1.9, 1.2]
+  ninth: [3.1, -1.9, 1.0]
+
+
