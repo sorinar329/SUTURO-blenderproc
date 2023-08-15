@@ -1,3 +1,4 @@
+scene: "storing_groceries_shelf2"
 objects:
   ["CrackerBox", "TunaFishCan", "TomatoSoupCan", "JelloBox", "Pear", "Lemon", "JellOStrawberryBox","Apple",
    "Strawberry", "MustardBottle", "CoffeeCan", "Banana", "MilkPack", "CerealBox", "Bowl", "Spoon"]
