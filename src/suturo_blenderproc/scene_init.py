@@ -1,14 +1,21 @@
 import blenderproc as bproc
 import numpy as np
 import suturo_blenderproc.types.Table
+import utils.path_utils
 
 
 class SceneInitializer(object):
-    def __init__(self, yaml_config, mesh_objects):
+    def __init__(self, yaml_config):
         self.yaml_config = yaml_config
-        self.mesh_objects = mesh_objects
+        self.mesh_objects = None
 
-    def init_objects(self):
+    def initialize_scene(self):
+        bproc.init()
+        self.mesh_objects = bproc.loader.load_blend(
+            utils.path_utils.get_path_blender_scene(self.yaml_config.get_scene()))
+        bproc.camera.set_resolution(640, 480)
+
+    def get_objects2annotate(self):
         object_names = self.yaml_config.get_objects()
         mesh_objects = [m for m in self.mesh_objects if isinstance(m, bproc.types.MeshObject)]
         mesh_objects = [bproc.filter.by_attr(mesh_objects, "name", f"{o}.*", regex=True) for o in object_names]
@@ -62,3 +69,13 @@ class SceneInitializer(object):
         tables = bproc.filter.by_attr(self.mesh_objects, "name", "OvalTableSurface.*", regex=True)
         tables.extend(bproc.filter.by_attr(self.mesh_objects, "name", "[^ ]+OvalTableSurface.*", regex=True))
         return self.process_table_surface(tables, "oval")
+
+    def sample_object_positions_gaussian(self, obj: bproc.types.MeshObject):
+        table = self.get_table_surfaces_round()[0]
+        center = table.center
+        variance_x = table.radius
+        variance_y = table.radius
+        cov = [[variance_x, 0], [0, variance_y]]
+        mean = center[:2]
+        x, y = np.random.multivariate_normal(mean=mean, cov=cov)
+        obj.set_location([x, y, center[2]])
