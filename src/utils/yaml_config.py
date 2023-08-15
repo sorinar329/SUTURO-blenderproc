@@ -26,4 +26,5 @@ class YAMLConfig(object):
     def get_objects(self):
         return self._data['objects']
 
-
+    def get_scene(self):
+        return self._data['scene']
