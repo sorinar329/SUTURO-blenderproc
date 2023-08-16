@@ -1,11 +1,10 @@
 import numpy as np
+import suturo_blenderproc.types.entity
 
 
-class Table(object):
+class Table(suturo_blenderproc.types.entity.Entity):
     def __init__(self):
-        self.id = ""
-        self.center = np.zeros(shape=(3, 1))
-        self.mesh_object = None
+        super().__init__()
 
 
 class RectangularTable(Table):
