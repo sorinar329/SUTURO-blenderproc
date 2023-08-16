@@ -1,6 +1,7 @@
 import blenderproc as bproc
 import numpy as np
-import suturo_blenderproc.types.Table
+import suturo_blenderproc.types.table
+import suturo_blenderproc.types.wall
 import utils.path_utils
 
 
@@ -21,30 +22,56 @@ class SceneInitializer(object):
         mesh_objects = [bproc.filter.by_attr(mesh_objects, "name", f"{o}.*", regex=True) for o in object_names]
         return [o for objects in mesh_objects for o in objects]
 
+    def get_all_mesh_objects(self):
+        return self.mesh_objects
+
+    def compute_bbox_properties(self, bbox):
+        x_min, y_min, z_min = np.min(bbox, axis=0)
+        x_max, y_max, z_max = np.max(bbox, axis=0)
+        x_length = x_max - x_min
+        y_length = y_max - y_min
+        z_length = z_max - z_min
+        center_point = np.array([x_min + (x_length / 2), y_min + (y_length / 2), z_min + (z_length / 2)])
+        return x_length, y_length, z_length, center_point
+
+    def get_walls(self):
+        walls = bproc.filter.by_attr(self.mesh_objects, "name", "[^ ]+Room.*", regex=True)
+        res = []
+        for wall in walls:
+            wall_object = suturo_blenderproc.types.wall.Wall()
+            wall_object.mesh_object = wall
+            bbox = wall.get_bound_box()
+            print(bbox, np.array(bbox).shape)
+            x_length, y_length, z_length, center_point = self.compute_bbox_properties(bbox)
+
+            wall_object.x_length = x_length
+            wall_object.y_length = y_length
+            wall_object.height = z_length
+            wall_object.center = center_point
+
+            wall_object.bbox = np.array(bbox)
+            res.append(wall_object)
+        return res
+
     def process_table_surface(self, tables, table_type):
         res = []
         for table in tables:
             assert isinstance(table, bproc.types.MeshObject)
             bbox = table.get_bound_box()
-            x_min, y_min, z_min = np.min(bbox, axis=0)
-            x_max, y_max, z_max = np.max(bbox, axis=0)
-            x_length = x_max - x_min
-            y_length = y_max - y_min
-            z_length = z_max - z_min
-            center_point = np.array([x_min + (x_length / 2), y_min + (y_length / 2), z_min + (z_length / 2)])
+            x_length, y_length, z_length, center_point = self.compute_bbox_properties(bbox)
 
             if table_type == "round":
-                radius = np.linalg.norm(center_point[0] - x_min)
-                table_object = suturo_blenderproc.types.Table.RoundTable()
+                radius = np.linalg.norm(center_point[0] - (x_length / 2))
+                table_object = suturo_blenderproc.types.table.RoundTable()
                 table_object.radius = radius
             elif table_type == "oval":
-                radius_x = np.linalg.norm(center_point[0] - x_min)
-                radius_y = np.linalg.norm(center_point[1] - y_min)
-                table_object = suturo_blenderproc.types.Table.OvalTable()
+                radius_x = np.linalg.norm(center_point[0] - (x_length / 2))
+                radius_y = np.linalg.norm(center_point[1] - (y_length / 2 ))
+                table_object = suturo_blenderproc.types.table.OvalTable()
                 table_object.semi_major_x = radius_x
                 table_object.semi_major_y = radius_y
             else:  # Assuming rectangular by default
-                table_object = suturo_blenderproc.types.Table.RectangularTable()
+                table_object = suturo_blenderproc.types.table.RectangularTable()
                 table_object.x_size = x_length
                 table_object.y_size = y_length
                 table_object.z_size = z_length
@@ -70,12 +97,16 @@ class SceneInitializer(object):
         tables.extend(bproc.filter.by_attr(self.mesh_objects, "name", "[^ ]+OvalTableSurface.*", regex=True))
         return self.process_table_surface(tables, "oval")
 
-    def sample_object_positions_gaussian(self, obj: bproc.types.MeshObject):
-        table = self.get_table_surfaces_round()[0]
+    def sample_object_pose_gaussian(self, obj: bproc.types.MeshObject):
+        table = self.get_table_surfaces_rectangular()[0]
         center = table.center
-        variance_x = table.radius
-        variance_y = table.radius
+        variance_x = table.x_size / 2 / 8
+        variance_y = table.y_size / 2 / 8
+        print(variance_x, variance_y)
         cov = [[variance_x, 0], [0, variance_y]]
         mean = center[:2]
         x, y = np.random.multivariate_normal(mean=mean, cov=cov)
-        obj.set_location([x, y, center[2]])
+        print(f"Sampled x,y location at: {x, y}")
+        obj.set_location([x, y, center[2] + 0.04])
+        rotation = np.random.uniform([0, 0, 0], [0, 0, 6])
+        obj.set_rotation_euler(obj.get_rotation_euler() + rotation)
