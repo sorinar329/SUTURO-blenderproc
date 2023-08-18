@@ -1,6 +1,8 @@
 import blenderproc as bproc
 import numpy as np
 
+import suturo_blenderproc.types.table
+
 
 def build_cam_pose(camera_position, poi):
     rotation_matrix = bproc.camera.rotation_from_forward_vec(poi - np.array(camera_position),
@@ -22,10 +24,11 @@ class CameraPoseSampler(object):
         bool2 = np.less(position, np.array([x_min, y_min, z_min]))
         return np.any(bool1) or np.any(bool2)
 
-    def get_cam_poses(self, camera_positions: [float], poi: [float]):
+    def build_cam_poses_from_config(self, camera_positions: [float], poi: [float]):
 
         if self.is_position_out_of_bounds(poi):
             raise Exception("Position of Interest is out of bounds, pls use a valid poi")
+
         step = 0
         while step != len(camera_positions):
             camera_position = camera_positions[step]
@@ -68,3 +71,51 @@ class CameraPoseSampler(object):
             else:
                 print("Camera position is out of bounds")
                 continue
+
+
+def set_random_rotation_euler_zaxis(mesh_object: bproc.types.MeshObject):
+    rotation = np.random.uniform([0, 0, 0], [0, 0, 6])
+    mesh_object.set_rotation_euler(mesh_object.get_rotation_euler() + rotation)
+
+
+class ObjectPoseSampler(object):
+    def __init__(self, surface, ):
+        self.surface = surface
+
+    def sample_object_pose_gaussian(self, obj: bproc.types.MeshObject):
+        surface = self.surface
+        center = surface.center
+        variance_x = surface.x_size * 2 / 3
+        variance_y = surface.y_size * 2 / 3
+        print(variance_x, variance_y)
+        cov = [[np.sqrt(variance_x), 0], [0, np.sqrt(variance_y)]]
+        mean = center[:2]
+        x, y = np.random.multivariate_normal(mean=mean, cov=cov)
+        print(f"Sampled x,y location at: {x, y}")
+        obj.move_origin_to_bottom_mean_point()
+        obj.set_location([x, y, surface.height])
+        set_random_rotation_euler_zaxis(obj)
+
+    def sample_object_pose_uniform(self, obj: bproc.types.MeshObject):
+        surface = self.surface
+        center = surface.center
+        dimensions = np.array([surface.x_size * 2 / 3, surface.y_size * 2 / 3])
+
+        lower_bound = np.append(center[:2] - (dimensions / 2), surface.height)
+        upper_bound = np.append(center[:2] + (dimensions / 2), surface.height)
+        object_pose = np.random.uniform(lower_bound, upper_bound)
+        obj.set_location([object_pose])
+        set_random_rotation_euler_zaxis(obj)
+
+# Noch nicht benutzen, das ist WIP
+class LightPoseSampler(object):
+    def __init__(self, surface: suturo_blenderproc.types.table.Table, walls: suturo_blenderproc.types.wall.Wall):
+        self.surface = surface
+        self.walls = walls
+
+    def sample__homogenous_lights(self, strength, num_lights, offset):
+        ceiling_height = self.walls.height
+        surface_center = self.surface.center[:2].append(ceiling_height)
+        light = bproc.types.Light()
+        light.set_location(surface_center)
+        light.set_energy(strength)
