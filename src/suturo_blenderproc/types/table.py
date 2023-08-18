@@ -5,6 +5,7 @@ import suturo_blenderproc.types.entity
 class Table(suturo_blenderproc.types.entity.Entity):
     def __init__(self):
         super().__init__()
+        self.height = 0.0
 
 
 class RectangularTable(Table):
@@ -12,7 +13,6 @@ class RectangularTable(Table):
         super().__init__()
         self.x_size = 0.0
         self.y_size = 0.0
-        self.z_size = 0.0
 
 
 class RoundTable(Table):
