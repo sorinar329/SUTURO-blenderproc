@@ -92,7 +92,6 @@ class ObjectPoseSampler(object):
         mean = center[:2]
         x, y = np.random.multivariate_normal(mean=mean, cov=cov)
         print(f"Sampled x,y location at: {x, y}")
-        obj.move_origin_to_bottom_mean_point()
         obj.set_location([x, y, surface.height])
         set_random_rotation_euler_zaxis(obj)
 
