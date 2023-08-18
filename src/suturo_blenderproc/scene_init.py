@@ -30,9 +30,11 @@ class SceneInitializer(object):
         x_max, y_max, z_max = np.max(bbox, axis=0)
         x_length = x_max - x_min
         y_length = y_max - y_min
-        z_length = z_max - z_min
-        center_point = np.array([x_min + (x_length / 2), y_min + (y_length / 2), z_min + (z_length / 2)])
-        return x_length, y_length, z_length, center_point
+        height = z_max
+        print(z_max)
+        center_point = np.array([x_min + (x_length / 2), y_min + (y_length / 2), height])
+        print(center_point)
+        return x_length, y_length, height, center_point
 
     def get_walls(self):
         walls = bproc.filter.by_attr(self.mesh_objects, "name", "[^ ]+Room.*", regex=True)
@@ -58,23 +60,27 @@ class SceneInitializer(object):
         for table in tables:
             assert isinstance(table, bproc.types.MeshObject)
             bbox = table.get_bound_box()
-            x_length, y_length, z_length, center_point = self.compute_bbox_properties(bbox)
+            x_length, y_length, height, center_point = self.compute_bbox_properties(bbox)
 
             if table_type == "round":
                 radius = np.linalg.norm(center_point[0] - (x_length / 2))
                 table_object = suturo_blenderproc.types.table.RoundTable()
                 table_object.radius = radius
+                table_object.height = height
+
             elif table_type == "oval":
                 radius_x = np.linalg.norm(center_point[0] - (x_length / 2))
-                radius_y = np.linalg.norm(center_point[1] - (y_length / 2 ))
+                radius_y = np.linalg.norm(center_point[1] - (y_length / 2))
                 table_object = suturo_blenderproc.types.table.OvalTable()
                 table_object.semi_major_x = radius_x
                 table_object.semi_major_y = radius_y
+                table_object.height = height
+
             else:  # Assuming rectangular by default
                 table_object = suturo_blenderproc.types.table.RectangularTable()
                 table_object.x_size = x_length
                 table_object.y_size = y_length
-                table_object.z_size = z_length
+                table_object.height = height
 
             table_object.center = center_point
             table_object.mesh_object = table
@@ -96,17 +102,3 @@ class SceneInitializer(object):
         tables = bproc.filter.by_attr(self.mesh_objects, "name", "OvalTableSurface.*", regex=True)
         tables.extend(bproc.filter.by_attr(self.mesh_objects, "name", "[^ ]+OvalTableSurface.*", regex=True))
         return self.process_table_surface(tables, "oval")
-
-    def sample_object_pose_gaussian(self, obj: bproc.types.MeshObject):
-        table = self.get_table_surfaces_rectangular()[0]
-        center = table.center
-        variance_x = table.x_size / 2 / 8
-        variance_y = table.y_size / 2 / 8
-        print(variance_x, variance_y)
-        cov = [[variance_x, 0], [0, variance_y]]
-        mean = center[:2]
-        x, y = np.random.multivariate_normal(mean=mean, cov=cov)
-        print(f"Sampled x,y location at: {x, y}")
-        obj.set_location([x, y, center[2] + 0.04])
-        rotation = np.random.uniform([0, 0, 0], [0, 0, 6])
-        obj.set_rotation_euler(obj.get_rotation_euler() + rotation)
