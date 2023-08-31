@@ -31,9 +31,7 @@ class SceneInitializer(object):
         x_length = x_max - x_min
         y_length = y_max - y_min
         height = z_max
-        print(z_max)
         center_point = np.array([x_min + (x_length / 2), y_min + (y_length / 2), height])
-        print(center_point)
         return x_length, y_length, height, center_point
 
     def get_walls(self):
@@ -43,7 +41,6 @@ class SceneInitializer(object):
             wall_object = suturo_blenderproc.types.wall.Wall()
             wall_object.mesh_object = wall
             bbox = wall.get_bound_box()
-            print(bbox, np.array(bbox).shape)
             x_length, y_length, z_length, center_point = self.compute_bbox_properties(bbox)
 
             wall_object.x_length = x_length
