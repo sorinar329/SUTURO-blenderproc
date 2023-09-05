@@ -3,6 +3,7 @@ import numpy as np
 import suturo_blenderproc.types.table
 import suturo_blenderproc.types.wall
 import utils.path_utils
+import json
 
 
 class SceneInitializer(object):
@@ -25,16 +26,89 @@ class SceneInitializer(object):
     def get_all_mesh_objects(self):
         return self.mesh_objects
 
+    def check_if_object_is_in_scene(self, obj):
+        found = False
+        for item in self.get_objects2annotate():
+            if obj in item.get_name().split("."):
+                found = True
+                break
+        return found
+
+    def get_path_to_obj(self, obj):
+        blenderproc_path_objects = "/home/charly/dev/blenderproc_suturo/suturo-blenderproc_data/objects/"
+        obj_path = blenderproc_path_objects + str(obj) + ".glb"
+        return obj_path
+
+    def iterate_through_yaml_obj(self):
+        list_of_new_objects = []
+        for obj in self.yaml_config.get_objects():
+            if self.check_if_object_is_in_scene(obj):
+                continue
+            else:
+                path_to_obj = self.get_path_to_obj(obj)
+                new_obj = bproc.loader.load_obj(path_to_obj)
+                new_obj[0].move_origin_to_bottom_mean_point()
+                new_obj[0].set_name(str(obj))
+                list_of_new_objects.append(new_obj[0])
+        return list_of_new_objects
+
     def compute_bbox_properties(self, bbox):
         x_min, y_min, z_min = np.min(bbox, axis=0)
         x_max, y_max, z_max = np.max(bbox, axis=0)
         x_length = x_max - x_min
         y_length = y_max - y_min
         height = z_max
-        print(z_max)
+
         center_point = np.array([x_min + (x_length / 2), y_min + (y_length / 2), height])
-        print(center_point)
+
         return x_length, y_length, height, center_point
+
+
+    def create_id_list_from_json(self, path_to_json):
+        with open(path_to_json) as json_file:
+            data = json.load(json_file)
+
+        val = list(data.values())
+        i = 0
+        new_list = []
+        for a in val:
+            item = a.split(":")
+
+            item_to_list = (item[0]).replace("'", "")
+            new_list.append(item_to_list)
+        i = i + 1
+
+        return new_list
+
+
+    def get_id_of_object(self, obj, path_to_json):
+        with open(path_to_json) as json_file:
+            data = json.load(json_file)
+
+        val = list(data.values())
+        i = 0
+        for item in val:
+            if item.endswith(obj):
+                id_of_obj = i
+                return id_of_obj
+            else:
+                i = i + 1
+
+
+    def assert_id(self, path_to_json, obj_list):
+        obj_ids = self.create_id_list_from_json(path_to_json)
+        for obj in obj_list:
+            print(obj.get_name())
+            if "." in obj.get_name():
+                if obj.get_name().split(".")[0] in obj_ids:
+                    obj_id = self.get_id_of_object(obj.get_name().split(".")[0], path_to_json)
+                    obj.set_cp("category_id", obj_id)
+
+
+            elif obj.get_name() in obj_ids:
+                obj_id = self.get_id_of_object(obj.get_name(), path_to_json)
+                obj.set_cp("category_id", obj_id)
+
 
     def get_walls(self):
         walls = bproc.filter.by_attr(self.mesh_objects, "name", "[^ ]+Room.*", regex=True)
@@ -43,7 +117,7 @@ class SceneInitializer(object):
             wall_object = suturo_blenderproc.types.wall.Wall()
             wall_object.mesh_object = wall
             bbox = wall.get_bound_box()
-            print(bbox, np.array(bbox).shape)
+
             x_length, y_length, z_length, center_point = self.compute_bbox_properties(bbox)
 
             wall_object.x_length = x_length

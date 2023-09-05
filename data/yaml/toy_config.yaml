@@ -1,6 +1,7 @@
 scene: "storing_groceries2"
+
 objects:
-  [ "Apple", "Banana", "Spoon" ]
+  [ "Apple", "Banana", "Spoon", "milk" ]
 
 object_positions:
   first: [ 2.30, -0.4 ]

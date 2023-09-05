@@ -3,9 +3,12 @@ import blenderproc as bproc
 import sys
 from pathlib import Path
 
+
 p = Path.cwd()
+
 while p.stem != "src":
     p = p.parent
+
 
 sys.path.append(str(p))
 import scenes.argparser
@@ -52,13 +55,14 @@ args = scenes.argparser.get_argparse()
 config = utils.yaml_config.YAMLConfig(filename=args.config_yaml)
 scene_initializer = suturo_blenderproc.scene_init.SceneInitializer(yaml_config=config)
 scene_initializer.initialize_scene()
+#scene_initializer.check_if_object_is_in_scene()
+scene_initializer.iterate_through_yaml_obj()
 tables = scene_initializer.get_table_surfaces_rectangular()
 walls = scene_initializer.get_walls()
 camera_pose_sampler = suturo_blenderproc.sampler.pose_sampler.CameraPoseSampler(walls=walls[0])
 camera_pose_sampler.build_cam_poses_from_config(config.get_list_camera_positions(), config.get_position_of_interest())
 object_pose_sampler = suturo_blenderproc.sampler.pose_sampler.ObjectPoseSampler(surface=tables[0])
 furnitures = bproc.filter.by_attr(scene_initializer.get_all_mesh_objects(), "name", "Furniture.*", regex=True)
-
 locations = [[4.4598, -3.395, 1.5], [5.44598, -3.395, 1.5], [4.64598, -2.595, 1.5], [4.64598, -4.195, 1.5],
              [3.84598, -3.395, 1.5]]
 set_homogeneous_lighting(locations=locations, strength=22)
@@ -91,21 +95,26 @@ def deploy_scene(x, objects):
         seg_data = bproc.renderer.render_segmap(map_by=["instance", "class", "name"])
 
         bproc.writer.write_coco_annotations(
-            os.path.join("/home/naser/workspace/SUTURO/SUTURO_WSS/SUTURO-Blenderproc/SUTURO-blenderproc/output",
+            os.path.join("/home/charly/dev/blenderproc_suturo//SUTURO-blenderproc/output",
                          'coco_data'),
             instance_segmaps=seg_data["instance_segmaps"],
             instance_attribute_maps=seg_data["instance_attribute_maps"],
             colors=data["colors"],
-            color_file_format="JPEG")
-        bproc.writer.write_hdf5("/home/naser/workspace/SUTURO/SUTURO_WSS/SUTURO-Blenderproc/SUTURO-blenderproc/output",
+            color_file_format="JPEG", mask_encoding_format="polygon")
+        bproc.writer.write_hdf5("/home/charly/dev/blenderproc_suturo//SUTURO-blenderproc/output",
                                 data)
         blenderproc.utility.reset_keyframes()
 
 
 def pipeline():
+    objects = scene_initializer.get_objects2annotate()
     hide_render_objects(scene_initializer.get_all_mesh_objects(), True)
     hide_render_objects(scene_initializer.get_objects2annotate(), False)
-    deploy_scene(10, scene_initializer.get_objects2annotate())
+    for item in scene_initializer.iterate_through_yaml_obj():
+        objects.append(item)
+
+    scene_initializer.assert_id("/home/charly/dev/blenderproc_suturo/SUTURO-blenderproc/data/json/id2name.json", objects)
+    deploy_scene(1, objects)
 
 
 pipeline()
