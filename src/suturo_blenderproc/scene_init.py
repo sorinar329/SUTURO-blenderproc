@@ -2,7 +2,9 @@ import blenderproc as bproc
 import numpy as np
 import suturo_blenderproc.types.table
 import suturo_blenderproc.types.wall
+import suturo_blenderproc.types.shelf
 import utils.path_utils
+import re
 
 
 class SceneInitializer(object):
@@ -99,3 +101,25 @@ class SceneInitializer(object):
         tables = bproc.filter.by_attr(self.mesh_objects, "name", "OvalTableSurface.*", regex=True)
         tables.extend(bproc.filter.by_attr(self.mesh_objects, "name", "[^ ]+OvalTableSurface.*", regex=True))
         return self.process_table_surface(tables, "oval")
+
+    def get_shelf_floors(self):
+        pattern = re.compile(r'[^ ]+SHELFFLOOR.*', re.IGNORECASE)
+        pattern2 = re.compile(r'SHELFFLOOR.*', re.IGNORECASE)
+
+        floors = bproc.filter.by_attr(self.mesh_objects, "name", pattern, regex=True)
+        floors.extend(bproc.filter.by_attr(self.mesh_objects, "name", pattern2, regex=True))
+        res = []
+        for floor in floors:
+            assert isinstance(floor, bproc.types.MeshObject)
+            bbox = floor.get_bound_box()
+            x_length, y_length, height, center_point = self.compute_bbox_properties(bbox)
+            shelf_floor = suturo_blenderproc.types.shelf.ShelfFloor()
+
+            shelf_floor.x_size = x_length
+            shelf_floor.y_size = y_length
+            shelf_floor.height = height
+            shelf_floor.center = center_point
+            shelf_floor.mesh_object = floor
+            res.append(shelf_floor)
+
+        return res
