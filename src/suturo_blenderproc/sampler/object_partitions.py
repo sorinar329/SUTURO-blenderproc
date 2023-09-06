@@ -21,6 +21,9 @@ class ObjectPartition(object):
         np.random.shuffle(objects)
         # Ensure that partitions created evenly
         objects = objects[0:(num_objects - num_objects % self.num_partitions)]
+        if self.num_partitions <= 1:
+            return objects
+
         partitions = np.split(objects, self.num_partitions)
         if partition_type == PartitionType.EQUAL_OBJECTS:
             self._partitions = partitions
@@ -65,3 +68,7 @@ class ObjectPartition(object):
                     num_objects -= 1
             self._partitions = partitions
             return partitions.tolist()
+
+    # Return previously created partition
+    def get_partition(self):
+        return self._partitions
