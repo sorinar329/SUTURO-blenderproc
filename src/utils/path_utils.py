@@ -49,9 +49,9 @@ def get_path_output_dir():
 
 
 def get_path_blender_scene(scene):
-    p = Path.cwd().joinpath(get_project_root(), "blender_data/scenes", scene)
+    p = Path.cwd().joinpath(get_project_root(), "suturo-blenderproc_data/scenes", scene)
     if not p.exists():
         print("Doesn't exist")
-        return Path.cwd().joinpath(get_project_root(), "blender_data/scenes", f"{scene}.blend")
+        return Path.cwd().joinpath(get_project_root(), "suturo-blenderproc_data/scenes", f"{scene}.blend")
 
     return p
