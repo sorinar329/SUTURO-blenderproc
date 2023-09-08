@@ -9,18 +9,22 @@ class PartitionType(Enum):
     LESS_PROBABLE_OBJECTS = auto()
 
 
-class ObjectPartition(object):
+class ObjectPartition:
     def __init__(self, num_partitions: int, objects: [bproc.types.MeshObject]):
+        if num_partitions <= 1:
+            raise AssertionError("The minimum amount of partitions should be at least 2")
+
         self.num_partitions = num_partitions
         self.objects = objects
         self._partitions = None
 
-    def create_partition(self, partition_type: PartitionType, probability_reduction_factor: float = 0.99):
-        num_objects = len(self.objects)
+    def create_partition(self, partition_type: PartitionType,
+                         probability_reduction_factor: float = 0.99) -> [[bproc.types.MeshObject]]:
         objects = np.asarray(self.objects)
         np.random.shuffle(objects)
         # Ensure that partitions created evenly
-        objects = objects[0:(num_objects - num_objects % self.num_partitions)]
+        objects = objects[0:(len(self.objects) - len(self.objects) % self.num_partitions)]
+        num_objects = objects.shape[0]
         if self.num_partitions <= 1:
             return objects
 
@@ -45,6 +49,9 @@ class ObjectPartition(object):
             return partitions
 
         if partition_type == PartitionType.LESS_PROBABLE_OBJECTS:
+            if not (0 < probability_reduction_factor < 1):
+                raise Exception("Probabilities either become negative or you increase the likelihood"
+                                "of the same object being drawn ")
             object_names = np.asarray([o.get_name().split('.')[0] for o in objects])
             partitions_size = int(num_objects / self.num_partitions)
             partitions = np.empty(shape=[self.num_partitions, partitions_size], dtype=object)
@@ -53,7 +60,6 @@ class ObjectPartition(object):
                 for j in range(partitions_size):
                     selected_idx = np.random.choice(np.arange(num_objects), size=1, p=probabilities)[0]
                     selected_object = objects[selected_idx]
-
                     # Aktualisieren der Partition und Objektlisten
                     partitions[i, j] = selected_object
                     object_indices = (object_names == object_names[selected_idx])
