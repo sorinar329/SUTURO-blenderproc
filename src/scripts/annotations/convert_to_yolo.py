@@ -4,6 +4,7 @@ import shutil
 from sklearn.model_selection import train_test_split
 
 
+# Generates a list of objects from the id2namejson
 def create_list_from_categories(path_to_json):
     with open(path_to_json) as json_file:
         data = json.load(json_file)
@@ -15,6 +16,7 @@ def create_list_from_categories(path_to_json):
     return l
 
 
+# Computes the BBox format for YOLO from COCO-Format
 def convert_bbox_coco2yolo(img_width, img_height, bbox):
     # YOLO bounding box format: [x_center, y_center, width, height]
     # (float values relative to width and height of image)
@@ -23,7 +25,6 @@ def convert_bbox_coco2yolo(img_width, img_height, bbox):
     y_tl = bbox[1]
     w = bbox[2]
     h = bbox[3]
-
 
     dw = 1.0 / img_width
     dh = 1.0 / img_height
@@ -39,6 +40,8 @@ def convert_bbox_coco2yolo(img_width, img_height, bbox):
     return [x, y, w, h]
 
 
+# Converts the annotations from the coco.json into one annotation.txt for every image.
+# This is required for YOLO training.
 def convert_coco_to_yolo(path_to_coco_annotation, new_dir, j=0):
     f = open(path_to_coco_annotation)
     data = json.load(f)
@@ -73,13 +76,13 @@ def convert_coco_to_yolo(path_to_coco_annotation, new_dir, j=0):
             i = i + 1
 
 
+#Moves the images from an old directory to the target directory
 def move_images_to_new_dir(old_dir, new_dir):
     os.makedirs(new_dir + "/images")
     for item in sorted(os.listdir(old_dir)):
         shutil.copy(old_dir + item, new_dir + "/images/" + item)
-    print(len(sorted(os.listdir(old_dir))) - 1)
-    print(sorted(os.listdir(new_dir + "/images"))[423])
     os.remove(new_dir + "/images/" + sorted(os.listdir(new_dir + "/images"))[len(sorted(os.listdir(old_dir))) - 1])
+
 
 
 def move_files_to_folder(list_of_files, destination_folder):
@@ -90,6 +93,7 @@ def move_files_to_folder(list_of_files, destination_folder):
             assert False
 
 
+#Splits the dataset into Train/Validation/Test subsets
 def trainsplit(path_source):
     os.makedirs(path_source + "train/images")
     os.makedirs(path_source + "val/images")
@@ -118,6 +122,8 @@ def trainsplit(path_source):
     move_files_to_folder(test_annotations, path_source + "test/labels")
 
 
+
+# Generates the data.yaml according to the data for the YOLO training.
 def write_data_yaml(path_to_json_for_id, new_folder):
     obj_list = create_list_from_categories(path_to_json_for_id)
     f = open(new_folder + "/data.yaml", "w+")
@@ -125,4 +131,3 @@ def write_data_yaml(path_to_json_for_id, new_folder):
     f.write("val: " + str(new_folder + "/val/images \n"))
     f.write("nc: " + str(len(obj_list)) + "\n")
     f.write("names: " + str(obj_list))
-
