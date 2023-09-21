@@ -1,10 +1,11 @@
 # SUTURO-blenderproc
 Blenderproc implementation for the SUTURO Project
 # About
+- Einleitung
 ## Object Sampling
-
+- Randomization Sampling bla bla
 ## Camera Sampling
-
+- POI, Rotation, Position, bla bla bla
 # Install
 - git clone this one
 - git clone the data folder
@@ -23,7 +24,7 @@ at `data/yaml/toy_config.yaml`
 
 ## How to start the process of synthetic data generation?
 
-
+## How to train on the newly generated data
 
 # User Configuration
 Within the configuration.yaml file you can tweak all neeeded parameters that are required for the synthetic data generation.
@@ -32,5 +33,5 @@ Within the configuration.yaml file you can tweak all neeeded parameters that are
 - number of camera poses/iterations: Set the number of camera poses and how many times the object sampling should be executed
 - id_path: Path to the json file containing the id's of objects
 - lighting strength: Set the lighting strength for the scene (default 50)
-- ?
+- yolo_train: Boolean if you want to train automatically after the dataset is generated (default False).
 
