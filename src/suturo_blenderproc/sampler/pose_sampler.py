@@ -60,8 +60,8 @@ class CameraPoseSampler:
         step = 0
         while step != num_poses:
             radian = np.radians(np.random.randint(360 / 5) * 5)
-            x = center[0] + radius * np.sin(radian)
-            y = center[1] + radius * np.cos(radian)
+            x = center[0] + radius * np.cos(radian)
+            y = center[1] + radius * np.sin(radian)
             camera_position = np.array([x, y, height])
             if not self.is_position_out_of_bounds(camera_position):
                 self.build_camera_pose(camera_position, poi)
@@ -97,7 +97,7 @@ class TableCameraPoseSampler(CameraPoseSampler):
 
 
 class ShelfCameraPoseSampler(CameraPoseSampler):
-    def __init__(self, room: suturo_blenderproc.types.room.Room, shelf=suturo_blenderproc.types.shelf.Shelf):
+    def __init__(self, room: suturo_blenderproc.types.room.Room, shelf: suturo_blenderproc.types.shelf.Shelf):
         super().__init__(room=room)
         self.shelf = shelf
 
@@ -107,12 +107,17 @@ class ShelfCameraPoseSampler(CameraPoseSampler):
         step = 0
         while step != num_poses:
             assert isinstance(self.shelf.mesh_object, bproc.types.MeshObject)
-            euler_z = self.shelf.mesh_object.get_rotation_euler()[2]
-            deg_z = np.rad2deg(euler_z)
-            radian = np.radians(np.random.randint(low=deg_z - 60, high=deg_z + 60))
 
-            x = center[0] + radius * np.sin(radian)
-            y = center[1] + radius * np.cos(radian)
+            euler_z = self.shelf.mesh_object.get_rotation_euler()[2]
+            deg_z = np.rad2deg(euler_z) - 90
+            new_angle = np.random.randint(low=deg_z - 30, high=deg_z + 30)
+
+            if new_angle < 0:
+                new_angle = 360 + new_angle
+            radian = np.radians(new_angle)
+
+            x = center[0] + radius * np.cos(radian)
+            y = center[1] + radius * np.sin(radian)
             print(f"camera position is at x,y: {x, y}")
             camera_position = np.array([x, y, height])
             if not self.is_position_out_of_bounds(camera_position):
@@ -132,8 +137,10 @@ class ObjectPoseSampler:
         mesh_object.set_rotation_euler(mesh_object.get_rotation_euler() + rotation)
 
     def sample_object_pose_uniform(self, obj: bproc.types.MeshObject) -> None:
+        print(self.surface.mesh_object.get_name())
         surface = self.surface
         center = surface.center
+        height = surface.height
         if isinstance(surface, suturo_blenderproc.types.table.RectangularTableSurface):
             dimensions = np.array([surface.x_size * 2 / 3, surface.y_size * 2 / 3])
         elif isinstance(surface, suturo_blenderproc.types.table.RoundTableSurface):
@@ -142,17 +149,19 @@ class ObjectPoseSampler:
             dimensions = np.array([surface.semi_major_x * 2 / 3, surface.semi_major_y * 2 / 3])
         elif isinstance(surface, suturo_blenderproc.types.shelf.ShelfFloor):
             dimensions = np.array([surface.x_size * 1 / 2, surface.y_size * 1 / 2])
+        elif isinstance(surface, suturo_blenderproc.types.shelf.Shelf):
+            dimensions = np.array([surface.x_size * 1 / 2, surface.y_size * 1 / 2])
+            height = 1.42838
         else:
             raise Exception("Pls set a proper surface or a shelf floor")
 
-        lower_bound = np.append(center[:2] - (dimensions / 2), surface.height)
-        upper_bound = np.append(center[:2] + (dimensions / 2), surface.height)
+        lower_bound = np.append(center[:2] - (dimensions / 2), height)
+        upper_bound = np.append(center[:2] + (dimensions / 2), height)
         object_pose = np.random.uniform(lower_bound, upper_bound)
         obj.set_location(object_pose)
         self.set_random_rotation_euler_zaxis(obj)
 
 
-# Noch nicht benutzen, das ist WIP
 class LightPoseSampler:
     def __init__(self, room: suturo_blenderproc.types.room):
         self.room = room
