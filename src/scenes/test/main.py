@@ -21,6 +21,8 @@ import blenderproc.python.types.MeshObjectUtility
 import numpy as np
 import utils.path_utils
 
+args = scenes.argparser.get_argparse()
+config = utils.yaml_config.YAMLConfig(filename=args.config_yaml)
 
 def hide_render_objects(blender_objects, render):
     for b_object in blender_objects:
@@ -29,7 +31,14 @@ def hide_render_objects(blender_objects, render):
 
 def deploy_scene(x, scene_initializer: suturo_blenderproc.scene_init.SceneInitializer):
     objects = scene_initializer.get_objects2annotate()
+    new_objects = scene_initializer.iterate_through_yaml_obj(config.get_path_to_object_source())
+    for obj in new_objects:
+        objects.append(obj)
+
+    #for obj in objects:
+    #    scene_initializer._set_category_id(config.get_id2name_path(), obj)
     scene_collection = scene_initializer.get_scene_collection()
+    scene_initializer._set_category_id(config.get_id2name_path(), objects)
     hide_render_objects(scene_initializer.get_all_mesh_objects(), True)
     table = scene_collection.get("Tables")[0]
     #table2 = scene_collection.get("Tables")[1]
@@ -51,6 +60,7 @@ def deploy_scene(x, scene_initializer: suturo_blenderproc.scene_init.SceneInitia
         surface=shelf.shelf_floors[1])
     # object_pose_sampler4 = suturo_blenderproc.sampler.pose_sampler.ObjectPoseSampler(
     #     surface=table2)
+
     object_partitioner = suturo_blenderproc.sampler.object_partitions.ObjectPartition(num_partitions=3, objects=objects)
     partitions = object_partitioner.create_partition(
         suturo_blenderproc.sampler.object_partitions.PartitionType.LESS_PROBABLE_OBJECTS,
@@ -97,28 +107,27 @@ def deploy_scene(x, scene_initializer: suturo_blenderproc.scene_init.SceneInitia
         data = bproc.renderer.render()
         seg_data = bproc.renderer.render_segmap(map_by=["instance", "class", "name"])
         bproc.writer.write_coco_annotations(
-            os.path.join("/home/naser/workspace/SUTURO/SUTURO_WSS/SUTURO-Blenderproc/SUTURO-blenderproc/output",
+            os.path.join("/home/sorin/code/SUTURO-blenderproc/SUTURO-blenderproc/output",
                          'coco_data'),
             instance_segmaps=seg_data["instance_segmaps"],
             instance_attribute_maps=seg_data["instance_attribute_maps"],
             colors=data["colors"],
             color_file_format="JPEG", mask_encoding_format="polygon")
-        bproc.writer.write_hdf5("/home/naser/workspace/SUTURO/SUTURO_WSS/SUTURO-Blenderproc/SUTURO-blenderproc/output",
+        bproc.writer.write_hdf5("/home/sorin/code/SUTURO-blenderproc/SUTURO-blenderproc/output",
                                 data)
         blenderproc.utility.reset_keyframes()
 
 
 def pipeline():
     start_time = time.time()
-    args = scenes.argparser.get_argparse()
-    config = utils.yaml_config.YAMLConfig(filename=args.config_yaml)
+    number_of_iterations = config.get_number_of_iterations()
     scene_initializer = suturo_blenderproc.scene_init.SceneInitializer(yaml_config=config,
-                                                                       path_id2name="/home/naser/workspace/SUTURO/SUTURO_WSS/SUTURO-Blenderproc/SUTURO-blenderproc/data/json/id2name.json")
+                                                                       path_id2name=config.get_id2name_path())
     scene_initializer.initialize_scene()
     # Sollte intern im scene initializer gemacht werden
     # for item in scene_initializer.iterate_through_yaml_obj():
     #     objects.append(item)
-    deploy_scene(3, scene_initializer)
+    deploy_scene(number_of_iterations, scene_initializer)
     # Endezeit erfassen
     end_time = time.time()
 

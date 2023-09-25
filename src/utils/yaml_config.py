@@ -28,3 +28,27 @@ class YAMLConfig(object):
 
     def get_scene(self):
         return self._data['scene']
+
+    def get_number_of_iterations(self):
+        return self._data['number_of_iterations']
+
+    def get_id2name_path(self):
+        return self._data["path_to_id2name"]
+
+    def get_number_of_camera_samples(self):
+        return self._data["number_of_camera_samples"]
+
+    def get_yolo_training(self):
+        return self._data["yolo_train"]
+
+    def get_lighting_strength(self):
+        return self._data["lighting_strength"]
+
+    def get_combine_dataset(self):
+        return self._data["combine_with_existing_dataset"]
+
+    def get_path_to_combine_dataset(self):
+        return self._data["path_to_dataset_that_has_to_be_combined"]
+
+    def get_path_to_object_source(self):
+        return self._data["obj_source"]
