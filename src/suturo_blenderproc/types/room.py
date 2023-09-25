@@ -12,6 +12,7 @@ class Room(suturo_blenderproc.types.entity.Entity):
 
     def get_mesh_objects_from_room(self) -> [blenderproc.types.MeshObject]:
         mesh_objects = [self.walls.mesh_object, self.floor.mesh_object, self.baseboard.mesh_object]
+        mesh_objects = [o for o in mesh_objects if o]
         return mesh_objects
 
 
