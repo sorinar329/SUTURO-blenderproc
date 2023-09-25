@@ -11,6 +11,7 @@ class Table(suturo_blenderproc.types.entity.Entity):
 
     def get_mesh_objects_from_table(self):
         mesh_objects = [self.table_chairs.mesh_object, self.table_legs.mesh_object, self.table_surface.mesh_object]
+        mesh_objects = [o for o in mesh_objects if o]
         return mesh_objects
 
 
