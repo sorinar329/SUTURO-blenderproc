@@ -1,6 +1,7 @@
 import blenderproc as bproc
 
 import sys
+import time
 from pathlib import Path
 
 p = Path.cwd()
@@ -18,23 +19,7 @@ import os
 
 import blenderproc.python.types.MeshObjectUtility
 import numpy as np
-
-
-def init_objects(object_names: [], mesh_objects: []):
-    mesh_objects = [m for m in mesh_objects if isinstance(m, blenderproc.types.MeshObject)]
-    return [bproc.filter.by_attr(mesh_objects, "name", f"{o}.*", regex=True) for o in object_names]
-
-
-def hide_object(mesh_objects: [blenderproc.types.MeshObject]):
-    print(type(mesh_objects))
-    for mesh_object in mesh_objects:
-        if isinstance(mesh_object, list):
-            for o in mesh_object:
-                print(o.get_name())
-                o.blender_obj.hide_render = True
-        else:
-            print(mesh_object.get_name())
-            mesh_object.blender_obj.hide_render = True
+import utils.path_utils
 
 
 def hide_render_objects(blender_objects, render):
@@ -42,79 +27,111 @@ def hide_render_objects(blender_objects, render):
         b_object.blender_obj.hide_render = render
 
 
-def set_homogeneous_lighting(locations, strength: float):
-    for location in locations:
-        light = bproc.types.Light()
-        light.set_location(location)
-        light.set_energy(strength)
+def deploy_scene(x, scene_initializer: suturo_blenderproc.scene_init.SceneInitializer):
+    objects = scene_initializer.get_objects2annotate()
+    scene_collection = scene_initializer.get_scene_collection()
+    hide_render_objects(scene_initializer.get_all_mesh_objects(), True)
+    table = scene_collection.get("Tables")[0]
+    #table2 = scene_collection.get("Tables")[1]
+    room = scene_collection.get("Room")[0]
+    shelf = scene_collection.get("Shelves")[0]
 
+    furniture = []
+    furniture.extend(room.get_mesh_objects_from_room())
+    furniture.extend(table.get_mesh_objects_from_table())
+    #furniture.extend(table2.get_mesh_objects_from_table())
+    furniture.append(shelf.mesh_object)
+    hide_render_objects(furniture, False)
 
-args = scenes.argparser.get_argparse()
-config = utils.yaml_config.YAMLConfig(filename=args.config_yaml)
-scene_initializer = suturo_blenderproc.scene_init.SceneInitializer(yaml_config=config)
-scene_initializer.initialize_scene()
-tables = scene_initializer.get_shelf_floors()
-walls = scene_initializer.get_walls()
-camera_pose_sampler = suturo_blenderproc.sampler.pose_sampler.CameraPoseSampler(walls=walls[0])
-object_pose_sampler = suturo_blenderproc.sampler.pose_sampler.ObjectPoseSampler(surface=tables[0])
-light_pose_sampler = suturo_blenderproc.sampler.pose_sampler.LightPoseSampler(walls=walls[0])
-furnitures = bproc.filter.by_attr(scene_initializer.get_all_mesh_objects(), "name", "Furniture.*", regex=True)
+    object_pose_sampler = suturo_blenderproc.sampler.pose_sampler.ObjectPoseSampler(
+        surface=table.table_surface)
+    object_pose_sampler2 = suturo_blenderproc.sampler.pose_sampler.ObjectPoseSampler(
+        surface=shelf.shelf_floors[0])
+    object_pose_sampler3 = suturo_blenderproc.sampler.pose_sampler.ObjectPoseSampler(
+        surface=shelf.shelf_floors[1])
+    # object_pose_sampler4 = suturo_blenderproc.sampler.pose_sampler.ObjectPoseSampler(
+    #     surface=table2)
+    object_partitioner = suturo_blenderproc.sampler.object_partitions.ObjectPartition(num_partitions=3, objects=objects)
+    partitions = object_partitioner.create_partition(
+        suturo_blenderproc.sampler.object_partitions.PartitionType.LESS_PROBABLE_OBJECTS,
+        probability_reduction_factor=0.5)
+    camera_pose_sampler = suturo_blenderproc.sampler.pose_sampler.TableCameraPoseSampler(room=room, table=table)
+    #camera_pose_sampler2 = suturo_blenderproc.sampler.pose_sampler.TableCameraPoseSampler(room=room, table=table2)
+    camera_pose_sampler3 = suturo_blenderproc.sampler.pose_sampler.ShelfCameraPoseSampler(room=room, shelf=shelf)
+    light_pose_sampler = suturo_blenderproc.sampler.pose_sampler.LightPoseSampler(room=room)
+    light_pose_sampler.sample_homogenous_lights_around_center(170)
 
-partitions = ObjectPartition(num_partitions=3,objects=scene_initializer.get_objects2annotate(),)
-partitions.create_partition(partition_type=PartitionType.UNIQUE_OBJECTS, probability_reduction_factor=0.1)
+    for partition in partitions:
+        hide_render_objects(partition, False)
 
-
-# locations = [[4.4598, -3.395, 1.5], [5.44598, -3.395, 1.5], [4.64598, -2.595, 1.5], [4.64598, -4.195, 1.5],
-#              [3.84598, -3.395, 1.5]]
-# set_homogeneous_lighting(locations=locations, strength=22)
-
-
-# centroid of table = 5.40737, -3.2758
-# plate dimension = 0.26,0.26, 0,02
-# bowl dimension = 0.168, 0.168, 0.055
-def deploy_scene(x, objects):
     for i in range(x):
-        subset = np.random.choice(objects, size=2)
-        print(subset.shape)
-        hide_render_objects(subset, False)
-        light_pose_sampler.sample_homogenous_lights_around_center(200)
-        blenderproc.object.sample_poses_on_surface(subset, tables[0].mesh_object,
+        blenderproc.object.sample_poses_on_surface(partitions[i % 3], table.table_surface.mesh_object,
                                                    object_pose_sampler.sample_object_pose_uniform,
-                                                   max_tries=333,
-                                                   min_distance=0.3, max_distance=0.7, up_direction=None,
+                                                   max_tries=10000,
+                                                   min_distance=0.3, max_distance=0.8,
+                                                   up_direction=np.array([0.0, 0.0, 1.0]),
                                                    check_all_bb_corners_over_surface=True)
-        radius = np.random.uniform(1.2, 1.8)
-        camera_pose_sampler.get_sampled_circular_cam_poses(num_poses=2, radius=radius,
-                                                           center=np.array([5.40, -3.2758]),
-                                                           poi=config.get_position_of_interest(), height=1.4)
-        hide_render_objects(furnitures, False)
-        # Render the scene
+        blenderproc.object.sample_poses_on_surface(partitions[(i + 1) % 3], shelf.shelf_floors[0].mesh_object,
+                                                   object_pose_sampler2.sample_object_pose_uniform,
+                                                   max_tries=10000,
+                                                   min_distance=0.08, max_distance=0.4, up_direction=None,
+                                                   check_all_bb_corners_over_surface=True)
+        blenderproc.object.sample_poses_on_surface(partitions[(i + 2) % 3], shelf.shelf_floors[1].mesh_object,
+                                                   object_pose_sampler3.sample_object_pose_uniform,
+                                                   max_tries=10000,
+                                                   min_distance=0.08, max_distance=0.4, up_direction=None,
+                                                   check_all_bb_corners_over_surface=True)
+        # blenderproc.object.sample_poses_on_surface(partitions[(i + 3) % 4], table2.table_surface.mesh_object,
+        #                                            object_pose_sampler4.sample_object_pose_uniform,
+        #                                            max_tries=1000, min_distance=0.3, max_distance=0.8,
+        #                                            up_direction=np.array([0.0, 0.0, 1.0]),
+        #                                            check_all_bb_corners_over_surface=True)
+        radius = np.random.uniform(1.6, 2.0)
+        camera_pose_sampler.sample_camera_poses_circular_table(num_poses=1, radius=radius,
+                                                               poi=table.table_surface.center,
+                                                               height=1.4)
+        #camera_pose_sampler2.sample_circular_poses(num_poses=1, radius=1.3, poi=table2.table_surface.center, height=1.4)
+        camera_pose_sampler3.sample_circular_cam_poses_shelves(1, radius, shelf.center, 1.33,
+                                                               np.array([1.88852, -0.400101, 1.13]))
 
         data = bproc.renderer.render()
-        # Write the rendering into an hdf5 file
-        hide_render_objects(furnitures, True)
-
         seg_data = bproc.renderer.render_segmap(map_by=["instance", "class", "name"])
-
         bproc.writer.write_coco_annotations(
             os.path.join("/home/naser/workspace/SUTURO/SUTURO_WSS/SUTURO-Blenderproc/SUTURO-blenderproc/output",
                          'coco_data'),
             instance_segmaps=seg_data["instance_segmaps"],
             instance_attribute_maps=seg_data["instance_attribute_maps"],
             colors=data["colors"],
-            color_file_format="JPEG")
+            color_file_format="JPEG", mask_encoding_format="polygon")
         bproc.writer.write_hdf5("/home/naser/workspace/SUTURO/SUTURO_WSS/SUTURO-Blenderproc/SUTURO-blenderproc/output",
                                 data)
-        hide_render_objects(subset, True)
         blenderproc.utility.reset_keyframes()
 
 
 def pipeline():
-    hide_render_objects(scene_initializer.get_all_mesh_objects(), True)
-    hide_render_objects(scene_initializer.get_objects2annotate(), False)
-    objects = scene_initializer.get_objects2annotate()
-    hide_render_objects(objects, True)
-    deploy_scene(3, objects)
+    start_time = time.time()
+    args = scenes.argparser.get_argparse()
+    config = utils.yaml_config.YAMLConfig(filename=args.config_yaml)
+    scene_initializer = suturo_blenderproc.scene_init.SceneInitializer(yaml_config=config,
+                                                                       path_id2name="/home/naser/workspace/SUTURO/SUTURO_WSS/SUTURO-Blenderproc/SUTURO-blenderproc/data/json/id2name.json")
+    scene_initializer.initialize_scene()
+    # Sollte intern im scene initializer gemacht werden
+    # for item in scene_initializer.iterate_through_yaml_obj():
+    #     objects.append(item)
+    deploy_scene(3, scene_initializer)
+    # Endezeit erfassen
+    end_time = time.time()
+
+    # Gesamtdauer berechnen
+    total_duration = end_time - start_time
+
+    # Die Gesamtdauer in Stunden, Minuten und Sekunden umrechnen
+    hours = int(total_duration // 3600)
+    minutes = int((total_duration % 3600) // 60)
+    seconds = int(total_duration % 60)
+
+    # Die Gesamtdauer ausgeben
+    print(f"Gesamtdauer: {hours} Stunden, {minutes} Minuten, {seconds} Sekunden")
 
 
 pipeline()

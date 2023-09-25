@@ -18,6 +18,9 @@ class ObjectPartition:
         self.objects = objects
         self._partitions = None
 
+        if len(self.objects) - len(self.objects) % self.num_partitions == 0:
+            raise ValueError("Partitions size is set to high in comparison to objects list lenght")
+
     def create_partition(self, partition_type: PartitionType,
                          probability_reduction_factor: float = 0.99) -> [[bproc.types.MeshObject]]:
         objects = np.asarray(self.objects)
@@ -25,8 +28,6 @@ class ObjectPartition:
         # Ensure that partitions created evenly
         objects = objects[0:(len(self.objects) - len(self.objects) % self.num_partitions)]
         num_objects = objects.shape[0]
-        if self.num_partitions <= 1:
-            return objects
 
         partitions = np.split(objects, self.num_partitions)
         if partition_type == PartitionType.EQUAL_OBJECTS:
