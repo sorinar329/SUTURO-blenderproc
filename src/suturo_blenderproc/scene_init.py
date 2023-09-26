@@ -26,6 +26,7 @@ class SceneInitializer(object):
         bproc.init()
         self.mesh_objects = bproc.loader.load_blend(
             utils.path_utils.get_path_blender_scene(self.yaml_config.get_scene()))
+        self.iterate_through_yaml_obj(self.yaml_config.get_path_to_object_source())
         bproc.camera.set_resolution(640, 480)
         #self._set_category_id(path_to_json=self.get_path_to_id2name(), obj_list=self.get_objects2annotate())
         self.scene_collection.update({'Room': self._create_room_from_mesh_objects()})
@@ -83,7 +84,7 @@ class SceneInitializer(object):
                 new_obj[0].move_origin_to_bottom_mean_point()
                 new_obj[0].set_name(str(obj))
                 list_of_new_objects.append(new_obj[0])
-        return list_of_new_objects
+        self.mesh_objects.extend(list_of_new_objects)
 
     def _compute_bbox_properties(self, mesh_object: bproc.types.MeshObject):
         bbox = mesh_object.get_bound_box()

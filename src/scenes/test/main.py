@@ -33,10 +33,6 @@ def hide_render_objects(blender_objects, render):
 
 def deploy_scene(x: int, scene_initializer: suturo_blenderproc.scene_init.SceneInitializer, logger: Logger):
     objects = scene_initializer.get_objects2annotate()
-    new_objects = scene_initializer.iterate_through_yaml_obj(config.get_path_to_object_source())
-    for obj in new_objects:
-        objects.append(obj)
-
     #for obj in objects:
     #    scene_initializer._set_category_id(config.get_id2name_path(), obj)
     scene_collection = scene_initializer.get_scene_collection()
@@ -52,7 +48,8 @@ def deploy_scene(x: int, scene_initializer: suturo_blenderproc.scene_init.SceneI
         furnitures.extend(shelf.get_mesh_objects_from_shelf())
 
     hide_render_objects(furnitures, False)
-    num_partitions = -(len(objects) // -4)
+    #num_partitions = -(len(objects) // -4)
+    num_partitions = 3
     object_partitioner = suturo_blenderproc.sampler.object_partitions.ObjectPartition(num_partitions, objects)
 
     partitions = object_partitioner.create_partition(
@@ -72,11 +69,12 @@ def deploy_scene(x: int, scene_initializer: suturo_blenderproc.scene_init.SceneI
     logger.log_component(iteration=0, component="Initialize")
     current_partition = 0
     surface = object_pose_sampler.get_current_surface()
-    for i in range(x):
-        light_strength = np.random.choice([10, 20, 40, 30, 50])
-        radius = np.random.uniform(1.6, 2.0)
 
-        light_pose_sampler.set_light_for_furniture(surface, light_strength)
+    light_strength = np.random.choice([10, 20, 40, 30, 50])
+    light_pose_sampler.set_light_for_furniture(surface, light_strength)
+    for i in range(x):
+
+        radius = np.random.uniform(1.6, 2.0)
         surfaces = [surface]
         if isinstance(surface, suturo_blenderproc.types.shelf.ShelfFloor):
             while object_pose_sampler.next_surface_same_parent():
