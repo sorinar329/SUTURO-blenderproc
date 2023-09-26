@@ -55,3 +55,6 @@ class YAMLConfig(object):
 
     def get_output_path(self):
         return self._data["output_path"]
+
+    def get_yolo_save_path(self):
+        return self._data["yolo_save_path"]
