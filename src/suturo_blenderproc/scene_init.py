@@ -1,6 +1,5 @@
 import blenderproc as bproc
 import numpy as np
-from blenderproc.python.object.FaceSlicer import FaceSlicer
 
 import suturo_blenderproc.types.room
 import suturo_blenderproc.types.shelf
@@ -77,7 +76,7 @@ class SceneInitializer(object):
         x_length = x_max - x_min
         y_length = y_max - y_min
         height = z_max
-        center_point = np.array([x_min + (x_length / 2), y_min + (y_length / 2), height])
+        center_point = np.array([x_min + (x_length / 2), y_min + (y_length / 2), z_min + ((height - z_min) / 2)])
         return bbox, x_length, y_length, height, center_point
 
     def _set_category_id(self, path_to_json, obj_list):
