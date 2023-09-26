@@ -122,6 +122,13 @@ def trainsplit(path_source):
     move_files_to_folder(test_annotations, path_source + "test/labels")
 
 
+def rename_images(path_to_new_dir, i=0):
+    data = sorted(os.listdir("/home/sorin/data/storing_groceries/images/"))
+    for d in data:
+        os.rename("/home/sorin/data/storing_groceries/images/" + d,
+                  "/home/sorin/data/storing_groceries/images/" + "image" + str(i) + ".jpg")
+        i = i + 1
+
 
 # Generates the data.yaml according to the data for the YOLO training.
 def write_data_yaml(path_to_json_for_id, new_folder):
@@ -131,3 +138,11 @@ def write_data_yaml(path_to_json_for_id, new_folder):
     f.write("val: " + str(new_folder + "/val/images \n"))
     f.write("nc: " + str(len(obj_list)) + "\n")
     f.write("names: " + str(obj_list))
+
+
+def create_yolo_dataset(json_id, json_coco, old_dir, new_dir):
+    convert_coco_to_yolo(json_coco, new_dir)
+    move_images_to_new_dir(old_dir, new_dir)
+    rename_images(path_to_new_dir=new_dir + "/images/", i = 0)
+    trainsplit(new_dir + "/")
+    write_data_yaml(json_id, new_dir)

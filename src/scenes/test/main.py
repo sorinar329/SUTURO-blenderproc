@@ -131,6 +131,8 @@ def pipeline():
     # Endezeit erfassen
     end_time = time.time()
 
+    # if yolo = True -> create_yolo_dataset()
+
     # Gesamtdauer berechnen
     total_duration = end_time - start_time
 
