@@ -1,5 +1,7 @@
-import blenderproc as bproc
 
+
+import blenderproc as bproc
+import random
 import logging
 import sys
 import time
@@ -19,9 +21,10 @@ import suturo_blenderproc.sampler.pose_sampler
 import suturo_blenderproc.types.shelf
 from suturo_blenderproc.sampler.object_partitions import ObjectPartition, PartitionType, validate_partitions
 import os
-
+from scripts.annotations.convert_to_yolo import create_yolo_dataset
 import blenderproc.python.types.MeshObjectUtility
 import numpy as np
+#import scripts.model.yolov8 as yolo
 
 args = scenes.argparser.get_argparse()
 config = utils.yaml_config.YAMLConfig(filename=args.config_yaml)
@@ -30,6 +33,7 @@ config = utils.yaml_config.YAMLConfig(filename=args.config_yaml)
 def hide_render_objects(blender_objects, render):
     for b_object in blender_objects:
         b_object.blender_obj.hide_render = render
+
 
 
 def deploy_scene(x: int, scene_initializer: suturo_blenderproc.scene_init.SceneInitializer, logger: Logger):
@@ -70,6 +74,8 @@ def deploy_scene(x: int, scene_initializer: suturo_blenderproc.scene_init.SceneI
 
     surfaces = [surface]
     for i in range(x):
+
+        scene_initializer.randomize_materials(furnitures)
         light_strength = np.random.choice([30, 40, 50, 60, 70])
         radius = np.random.uniform(1.6, 2.0)
 
@@ -82,7 +88,6 @@ def deploy_scene(x: int, scene_initializer: suturo_blenderproc.scene_init.SceneI
         else:
             camera_pose_sampler.sample_camera_poses_circular_table(table_surfaces=[surface], num_poses=2, radius=radius,
                                                                    height=1.5)
-
         for surface in surfaces:
             light_pose_sampler.set_light_for_furniture(surface, light_strength)
             bproc.object.sample_poses_on_surface(partitions[current_partition],
@@ -130,12 +135,19 @@ def pipeline():
 
     scene_initializer = suturo_blenderproc.scene_init.SceneInitializer(yaml_config=config,
                                                                        path_id2name=config.get_id2name_path())
+
     scene_initializer.initialize_scene()
     # Sollte intern im scene initializer gemacht werden
     # for item in scene_initializer.iterate_through_yaml_obj():
     #     objects.append(item)
 
-    deploy_scene(20, scene_initializer, logger)
+
+    deploy_scene(config.get_number_of_iterations(), scene_initializer, logger)
+
+    if config.get_yolo_training():
+        create_yolo_dataset(config.get_id2name_path(), config.get_output_path() + "/coco_data/coco_annotations.json",
+                            config.get_output_path() + "/coco_data/images/", config.get_yolo_save_path())
+
 
 
 pipeline()
