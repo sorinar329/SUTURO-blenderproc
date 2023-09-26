@@ -1,5 +1,6 @@
 import blenderproc as bproc
 
+import logging
 import sys
 import time
 from pathlib import Path
@@ -10,16 +11,17 @@ while p.stem != "src":
 
 sys.path.append(str(p))
 import scenes.argparser
+from utils.logger import Logger
 import utils.yaml_config
 import utils.path_utils
 import suturo_blenderproc.scene_init
 import suturo_blenderproc.sampler.pose_sampler
-from suturo_blenderproc.sampler.object_partitions import ObjectPartition, PartitionType
+import suturo_blenderproc.types.shelf
+from suturo_blenderproc.sampler.object_partitions import ObjectPartition, PartitionType, validate_partitions
 import os
 
 import blenderproc.python.types.MeshObjectUtility
 import numpy as np
-import utils.path_utils
 
 
 def hide_render_objects(blender_objects, render):
@@ -27,73 +29,62 @@ def hide_render_objects(blender_objects, render):
         b_object.blender_obj.hide_render = render
 
 
-def deploy_scene(x, scene_initializer: suturo_blenderproc.scene_init.SceneInitializer):
+def deploy_scene(x: int, scene_initializer: suturo_blenderproc.scene_init.SceneInitializer, logger: Logger):
     objects = scene_initializer.get_objects2annotate()
     scene_collection = scene_initializer.get_scene_collection()
     hide_render_objects(scene_initializer.get_all_mesh_objects(), True)
-    table = scene_collection.get("Tables")[0]
-    #table2 = scene_collection.get("Tables")[1]
+    furnitures = []
     room = scene_collection.get("Room")[0]
-    shelf = scene_collection.get("Shelves")[0]
+    furnitures.extend(room.get_mesh_objects_from_room())
+    for table in scene_collection.get("Tables"):
+        furnitures.extend(table.get_mesh_objects_from_table())
+    for shelf in scene_collection.get("Shelves"):
+        furnitures.extend(shelf.get_mesh_objects_from_shelf())
 
-    furniture = []
-    furniture.extend(room.get_mesh_objects_from_room())
-    furniture.extend(table.get_mesh_objects_from_table())
-    #furniture.extend(table2.get_mesh_objects_from_table())
-    furniture.append(shelf.mesh_object)
-    hide_render_objects(furniture, False)
-
-    object_pose_sampler = suturo_blenderproc.sampler.pose_sampler.ObjectPoseSampler(
-        surface=table.table_surface)
-    object_pose_sampler2 = suturo_blenderproc.sampler.pose_sampler.ObjectPoseSampler(
-        surface=shelf.shelf_floors[0])
-    object_pose_sampler3 = suturo_blenderproc.sampler.pose_sampler.ObjectPoseSampler(
-        surface=shelf.shelf_floors[1])
-    # object_pose_sampler4 = suturo_blenderproc.sampler.pose_sampler.ObjectPoseSampler(
-    #     surface=table2)
-    object_partitioner = suturo_blenderproc.sampler.object_partitions.ObjectPartition(num_partitions=3, objects=objects)
+    hide_render_objects(furnitures, False)
+    num_partitions = -(len(objects) // -4)
+    object_partitioner = suturo_blenderproc.sampler.object_partitions
     partitions = object_partitioner.create_partition(
         suturo_blenderproc.sampler.object_partitions.PartitionType.LESS_PROBABLE_OBJECTS,
         probability_reduction_factor=0.5)
-    camera_pose_sampler = suturo_blenderproc.sampler.pose_sampler.TableCameraPoseSampler(room=room, table=table)
-    #camera_pose_sampler2 = suturo_blenderproc.sampler.pose_sampler.TableCameraPoseSampler(room=room, table=table2)
-    camera_pose_sampler3 = suturo_blenderproc.sampler.pose_sampler.ShelfCameraPoseSampler(room=room, shelf=shelf)
-    light_pose_sampler = suturo_blenderproc.sampler.pose_sampler.LightPoseSampler(room=room)
-    light_pose_sampler.sample_homogenous_lights_around_center(170)
 
-    for partition in partitions:
-        hide_render_objects(partition, False)
+    camera_pose_sampler = suturo_blenderproc.sampler.pose_sampler. \
+        TableCameraPoseSampler(room=room, tables=scene_collection.get("Tables"))
+
+    camera_pose_sampler2 = suturo_blenderproc.sampler.pose_sampler. \
+        ShelfCameraPoseSampler(room=room, shelves=[scene_collection.get("Shelves")[0]])
+
+    light_pose_sampler = suturo_blenderproc.sampler.pose_sampler.LightPoseSampler(room=room)
+
+    object_pose_sampler = suturo_blenderproc.sampler.pose_sampler.ObjectPoseSampler(
+        furnitures=scene_collection.get("Tables"))
+    logger.log_component(iteration=0, component="Initialize")
 
     for i in range(x):
-        blenderproc.object.sample_poses_on_surface(partitions[i % 3], table.table_surface.mesh_object,
-                                                   object_pose_sampler.sample_object_pose_uniform,
-                                                   max_tries=10000,
-                                                   min_distance=0.3, max_distance=0.8,
-                                                   up_direction=np.array([0.0, 0.0, 1.0]),
-                                                   check_all_bb_corners_over_surface=True)
-        blenderproc.object.sample_poses_on_surface(partitions[(i + 1) % 3], shelf.shelf_floors[0].mesh_object,
-                                                   object_pose_sampler2.sample_object_pose_uniform,
-                                                   max_tries=10000,
-                                                   min_distance=0.08, max_distance=0.4, up_direction=None,
-                                                   check_all_bb_corners_over_surface=True)
-        blenderproc.object.sample_poses_on_surface(partitions[(i + 2) % 3], shelf.shelf_floors[1].mesh_object,
-                                                   object_pose_sampler3.sample_object_pose_uniform,
-                                                   max_tries=10000,
-                                                   min_distance=0.08, max_distance=0.4, up_direction=None,
-                                                   check_all_bb_corners_over_surface=True)
-        # blenderproc.object.sample_poses_on_surface(partitions[(i + 3) % 4], table2.table_surface.mesh_object,
-        #                                            object_pose_sampler4.sample_object_pose_uniform,
-        #                                            max_tries=1000, min_distance=0.3, max_distance=0.8,
-        #                                            up_direction=np.array([0.0, 0.0, 1.0]),
-        #                                            check_all_bb_corners_over_surface=True)
+        light_strength = np.random.choice([10, 20, 40, 30, 50])
+        current_partition = 0
         radius = np.random.uniform(1.6, 2.0)
-        camera_pose_sampler.sample_camera_poses_circular_table(num_poses=1, radius=radius,
-                                                               poi=table.table_surface.center,
-                                                               height=1.4)
-        #camera_pose_sampler2.sample_circular_poses(num_poses=1, radius=1.3, poi=table2.table_surface.center, height=1.4)
-        camera_pose_sampler3.sample_circular_cam_poses_shelves(1, radius, shelf.center, 1.33,
-                                                               np.array([1.88852, -0.400101, 1.13]))
 
+        surface = object_pose_sampler.get_current_surface()
+        light_pose_sampler.set_light_for_furniture(surface, light_strength)
+        bproc.object.sample_poses_on_surface(partitions[current_partition],
+                                             surface.mesh_object,
+                                             object_pose_sampler.sample_object_pose_uniform,
+                                             max_tries=1000, min_distance=0.08, max_distance=0.5,
+                                             up_direction=np.array([0.0, 0.0, 1.0]),
+                                             check_all_bb_corners_over_surface=True
+                                             )
+        validate_partitions(partitions[current_partition])
+        hide_render_objects(partitions[current_partition], False)
+        camera_pose_sampler.sample_camera_poses_circular_table(table_surfaces=[surface], num_poses=3, radius=radius,
+                                                               height=1.5)
+        current_partition += 1
+        if current_partition == num_partitions:
+            current_partition = 0
+            object_pose_sampler.next_surface()
+
+        # camera_pose_sampler2.sample_circular_cam_poses_shelves(num_poses=1, radius=radius, height=1.4)
+        logger.log_component(i, "Start rendering")
         data = bproc.renderer.render()
         seg_data = bproc.renderer.render_segmap(map_by=["instance", "class", "name"])
         bproc.writer.write_coco_annotations(
@@ -105,11 +96,13 @@ def deploy_scene(x, scene_initializer: suturo_blenderproc.scene_init.SceneInitia
             color_file_format="JPEG", mask_encoding_format="polygon")
         bproc.writer.write_hdf5("/home/naser/workspace/SUTURO/SUTURO_WSS/SUTURO-Blenderproc/SUTURO-blenderproc/output",
                                 data)
+        logger.log_component(i, "Finished rendering")
+        hide_render_objects(partitions[current_partition], True)
         blenderproc.utility.reset_keyframes()
 
 
 def pipeline():
-    start_time = time.time()
+    logger = Logger()
     args = scenes.argparser.get_argparse()
     config = utils.yaml_config.YAMLConfig(filename=args.config_yaml)
     scene_initializer = suturo_blenderproc.scene_init.SceneInitializer(yaml_config=config,
@@ -118,20 +111,7 @@ def pipeline():
     # Sollte intern im scene initializer gemacht werden
     # for item in scene_initializer.iterate_through_yaml_obj():
     #     objects.append(item)
-    deploy_scene(3, scene_initializer)
-    # Endezeit erfassen
-    end_time = time.time()
-
-    # Gesamtdauer berechnen
-    total_duration = end_time - start_time
-
-    # Die Gesamtdauer in Stunden, Minuten und Sekunden umrechnen
-    hours = int(total_duration // 3600)
-    minutes = int((total_duration % 3600) // 60)
-    seconds = int(total_duration % 60)
-
-    # Die Gesamtdauer ausgeben
-    print(f"Gesamtdauer: {hours} Stunden, {minutes} Minuten, {seconds} Sekunden")
+    deploy_scene(10, scene_initializer, logger)
 
 
 pipeline()
