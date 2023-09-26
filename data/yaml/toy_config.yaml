@@ -1,6 +1,26 @@
 scene: "storing_groceries2"
-objects:
-  [ "Apple", "Banana", "Spoon" ]
+
+objects: [ "Colacan", "Nesquickcerealbox", "Milkpackja"]
+
+obj_source: "/home/sorin/code/SUTURO-blenderproc/suturo-blenderproc_data/objects/"
+
+number_of_camera_samples: 5
+
+number_of_iterations: 2
+
+path_to_id2name: "/home/sorin/code/SUTURO-blenderproc/SUTURO-blenderproc/data/json/id2name.json"
+
+lighting_strength: 50
+
+output_path: "/home/sorin/code/SUTURO-blenderproc/SUTURO-blenderproc/output"
+
+yolo_train: False
+
+combine_with_existing_dataset: False
+
+path_to_dataset_that_has_to_be_combined: "path"
+
+
 
 object_positions:
   first: [ 2.30, -0.4 ]

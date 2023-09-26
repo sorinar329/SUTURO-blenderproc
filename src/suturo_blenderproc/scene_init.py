@@ -12,16 +12,22 @@ import re
 class SceneInitializer(object):
     def __init__(self, yaml_config, path_id2name):
         self.yaml_config = yaml_config
-        self.path_id2name = path_id2name
+        self.path_id2name = None
         self.mesh_objects = None
         self.scene_collection = {}
+        self.yolo_train = False
+        self.combine_datasets = False
+        self.path_to_combinining_dataset = None
+        self.lighting_strength = 50
+        self.number_of_iterations = 10
+        self.number_of_camera_samples = 10
 
     def initialize_scene(self):
         bproc.init()
         self.mesh_objects = bproc.loader.load_blend(
             utils.path_utils.get_path_blender_scene(self.yaml_config.get_scene()))
         bproc.camera.set_resolution(640, 480)
-        self._set_category_id(path_to_json=self.path_id2name, obj_list=self.get_objects2annotate())
+        #self._set_category_id(path_to_json=self.get_path_to_id2name(), obj_list=self.get_objects2annotate())
         self.scene_collection.update({'Room': self._create_room_from_mesh_objects()})
         tables = []
         tables.extend(self._create_rectangular_table_from_mesh_objects())
@@ -33,11 +39,17 @@ class SceneInitializer(object):
     def get_scene_collection(self):
         return self.scene_collection
 
+    def get_path_to_id2name(self):
+        path = self.yaml_config.get_id2name_path()
+        return path
+
     def get_objects2annotate(self):
         object_names = self.yaml_config.get_objects()
         objects2annotate = []
         for name in object_names:
             objects2annotate.extend(self._get_mesh_objects_by_name(name))
+
+
         return objects2annotate
 
     def get_all_mesh_objects(self):
@@ -51,19 +63,23 @@ class SceneInitializer(object):
                 break
         return found
 
-    def get_path_to_obj(self, obj):
-        blenderproc_path_objects = "/home/charly/dev/blenderproc_suturo/suturo-blenderproc_data/objects/"
+    def get_path_to_obj(self, obj, path_to_source):
+        blenderproc_path_objects = path_to_source
         obj_path = blenderproc_path_objects + str(obj) + ".glb"
         return obj_path
 
-    def iterate_through_yaml_obj(self):
+    def iterate_through_yaml_obj(self, path_to_source):
         list_of_new_objects = []
         for obj in self.yaml_config.get_objects():
             if self.check_if_object_is_in_scene(obj):
+                print("ist drin" + str(obj))
                 continue
             else:
-                path_to_obj = self.get_path_to_obj(obj)
+                print("ist nicht drin" + str(obj))
+                path_to_obj = self.get_path_to_obj(obj, path_to_source)
+                print(path_to_obj)
                 new_obj = bproc.loader.load_obj(path_to_obj)
+                print(new_obj)
                 new_obj[0].move_origin_to_bottom_mean_point()
                 new_obj[0].set_name(str(obj))
                 list_of_new_objects.append(new_obj[0])
