@@ -1,5 +1,3 @@
-
-
 import blenderproc as bproc
 import random
 import logging
@@ -24,7 +22,8 @@ import os
 from scripts.annotations.convert_to_yolo import create_yolo_dataset
 import blenderproc.python.types.MeshObjectUtility
 import numpy as np
-#import scripts.model.yolov8 as yolo
+
+# import scripts.model.yolov8 as yolo
 
 args = scenes.argparser.get_argparse()
 config = utils.yaml_config.YAMLConfig(filename=args.config_yaml)
@@ -35,11 +34,9 @@ def hide_render_objects(blender_objects, render):
         b_object.blender_obj.hide_render = render
 
 
-
 def deploy_scene(x: int, scene_initializer: suturo_blenderproc.scene_init.SceneInitializer, logger: Logger):
     objects = scene_initializer.get_objects2annotate()
     scene_collection = scene_initializer.get_scene_collection()
-    scene_initializer._set_category_id(config.get_id2name_path(), objects)
     hide_render_objects(scene_initializer.get_all_mesh_objects(), True)
     furnitures = []
     room = scene_collection.get("Room")[0]
@@ -71,42 +68,33 @@ def deploy_scene(x: int, scene_initializer: suturo_blenderproc.scene_init.SceneI
     logger.log_component(iteration=0, component="Initialize")
     current_partition = 0
     surface = object_pose_sampler.get_current_surface()
-
-    surfaces = [surface]
     for i in range(x):
-
         scene_initializer.randomize_materials(furnitures)
         light_strength = np.random.choice([30, 40, 50, 60, 70])
         radius = np.random.uniform(1.6, 2.0)
 
         if isinstance(surface, suturo_blenderproc.types.shelf.ShelfFloor):
-            while object_pose_sampler.next_surface_same_parent():
-                object_pose_sampler.next_surface()
-                surface = object_pose_sampler.get_current_surface()
-                surfaces.append(surface)
-            camera_pose_sampler2.sample_circular_cam_poses_shelves(filter_shelf_floors=surfaces)
+            camera_pose_sampler2.sample_circular_cam_poses_shelves(filter_shelf_floors=[surface])
         else:
             camera_pose_sampler.sample_camera_poses_circular_table(table_surfaces=[surface], num_poses=2, radius=radius,
                                                                    height=1.5)
-        for surface in surfaces:
-            light_pose_sampler.set_light_for_furniture(surface, light_strength)
-            bproc.object.sample_poses_on_surface(partitions[current_partition],
-                                                 surface.mesh_object,
-                                                 object_pose_sampler.sample_object_pose_uniform,
-                                                 max_tries=1000, min_distance=0.08, max_distance=0.5,
-                                                 up_direction=np.array([0.0, 0.0, 1.0]),
-                                                 check_all_bb_corners_over_surface=True
-                                                 )
-            validate_partitions(partitions[current_partition])
-            hide_render_objects(partitions[current_partition], False)
 
-            current_partition += 1
-            if current_partition == num_partitions:
-                current_partition = 0
-                object_pose_sampler.next_surface()
-                surface = object_pose_sampler.get_current_surface()
-                surfaces = [surface]
-                break
+        light_pose_sampler.set_light_for_furniture(surface, light_strength)
+        bproc.object.sample_poses_on_surface(partitions[current_partition],
+                                             surface.mesh_object,
+                                             object_pose_sampler.sample_object_pose_uniform,
+                                             max_tries=1000, min_distance=0.08, max_distance=0.5,
+                                             up_direction=np.array([0.0, 0.0, 1.0]),
+                                             check_all_bb_corners_over_surface=True
+                                             )
+        validate_partitions(partitions[current_partition])
+        hide_render_objects(partitions[current_partition], False)
+
+        current_partition += 1
+        if current_partition == num_partitions:
+            current_partition = 0
+            object_pose_sampler.next_surface()
+            surface = object_pose_sampler.get_current_surface()
 
         logger.log_component(i, "Start rendering")
         data = bproc.renderer.render()
@@ -141,13 +129,11 @@ def pipeline():
     # for item in scene_initializer.iterate_through_yaml_obj():
     #     objects.append(item)
 
-
     deploy_scene(config.get_number_of_iterations(), scene_initializer, logger)
 
     if config.get_yolo_training():
         create_yolo_dataset(config.get_id2name_path(), config.get_output_path() + "/coco_data/coco_annotations.json",
                             config.get_output_path() + "/coco_data/images/", config.get_yolo_save_path())
-
 
 
 pipeline()
