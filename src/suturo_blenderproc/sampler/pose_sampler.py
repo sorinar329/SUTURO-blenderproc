@@ -111,8 +111,17 @@ class ShelfCameraPoseSampler(CameraPoseSampler):
         super().__init__(room=room)
         self.shelves = shelves
 
-    def sample_circular_cam_poses_shelves(self, num_poses: int, radius: float, height: float) -> None:
-        for shelf in self.shelves:
+    def sample_circular_cam_poses_shelves(self, shelf_floors: [suturo_blenderproc.types.shelf.ShelfFloor] = [],
+                                          num_poses: int = 1, radius: float = 1.5,
+                                          height: float = 1.3) -> None:
+
+        sample_camera_poses_shelves = self.shelves
+
+        if len(shelf_floors) > 0:
+            sample_camera_poses_shelves = [shelf for shelf in self.shelves if
+                                           set(shelf.shelf_floors).issubset(set(shelf_floors))]
+
+        for shelf in sample_camera_poses_shelves:
             step = 0
             center = shelf.center
             while step != num_poses:
@@ -189,12 +198,14 @@ class ObjectPoseSampler:
         return self.surfaces[self.current_surface]
 
     def next_surface_same_parent(self) -> bool:
+        current = self.current_surface
+        if current == self.get_len_surfaces() - 1:
+            return False
         return self.surfaces[self.current_surface].mesh_object.get_parent() == \
-               self.surfaces[(self.current_surface + 1) % self.get_len_surfaces()].mesh_object.get_parent()
+               self.surfaces[self.current_surface + 1].mesh_object.get_parent()
 
     def next_surface(self) -> None:
         self.current_surface = (self.current_surface + 1) % self.get_len_surfaces()
-        print(self.current_surface)
 
 
 class LightPoseSampler:
@@ -208,8 +219,9 @@ class LightPoseSampler:
             light = bproc.types.Light()
             light.set_location(center)
             light.set_energy(strength)
-            print(f"Set light at location: {center} with strength: {strength}")
         if isinstance(surface, suturo_blenderproc.types.shelf.ShelfFloor):
+            center = surface.shelf.center
+            center[2] = self.room.walls.height - 0.7
             euler_z = surface.mesh_object.get_rotation_euler()[2]
             if isinstance(surface.mesh_object.get_parent(), bproc.types.Entity):
                 euler_z = surface.mesh_object.get_parent().get_rotation_euler()[2]
@@ -217,8 +229,8 @@ class LightPoseSampler:
             if deg_z < 0:
                 deg_z = 360 + deg_z
             radian = np.radians(deg_z)
-            x = center[0] + 0.6 * np.cos(radian)
-            y = center[1] + 0.6 * np.sin(radian)
+            x = center[0] + 0.8 * np.cos(radian)
+            y = center[1] + 0.8 * np.sin(radian)
             light = bproc.types.Light()
             light.set_location([x, y, center[2]])
             light.set_energy(strength)
