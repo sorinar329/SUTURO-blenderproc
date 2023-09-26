@@ -199,6 +199,7 @@ class SceneInitializer(object):
                     continue
                 bbox, x_length, y_length, height, center_point = self._compute_bbox_properties(floor)
                 shelf_floor = suturo_blenderproc.types.shelf.ShelfFloor()
+                shelf_floor.shelf = shelf_object
                 shelf_floor.mesh_object = floor
                 shelf_floor.center = center_point
                 shelf_floor.x_size = x_length
