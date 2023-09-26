@@ -1,6 +1,5 @@
 import blenderproc as bproc
 import numpy as np
-from blenderproc.python.object.FaceSlicer import FaceSlicer
 
 import suturo_blenderproc.types.room
 import suturo_blenderproc.types.shelf
@@ -93,7 +92,7 @@ class SceneInitializer(object):
         x_length = x_max - x_min
         y_length = y_max - y_min
         height = z_max
-        center_point = np.array([x_min + (x_length / 2), y_min + (y_length / 2), height])
+        center_point = np.array([x_min + (x_length / 2), y_min + (y_length / 2), z_min + ((height - z_min) / 2)])
         return bbox, x_length, y_length, height, center_point
 
     def _set_category_id(self, path_to_json, obj_list):
@@ -203,16 +202,9 @@ class SceneInitializer(object):
         res = []
         for shelf in shelves:
             bbox, x_length, y_length, height, center_point = self._compute_bbox_properties(shelf)
-            # Propertly transform, such that bbox has correct coordinates
-            # if shelf.get_parent():
-            #     transform_matrix = shelf.get_local2world_mat()
-            #     location = transform_matrix[:, 3][0:3]
-            #     shelf.set_location(location)
-            #     shelf.set_rotation_mat(transform_matrix[:3, :3])
-
             shelf_object = suturo_blenderproc.types.shelf.Shelf()
             shelf_object.bbox = bbox
-            shelf_object.center = shelf.get_location()
+            shelf_object.center = center_point
             shelf_object.x_size = x_length
             shelf_object.y_size = y_length
             shelf_object.height = height
@@ -221,15 +213,11 @@ class SceneInitializer(object):
             for floor in shelf_floors:
                 if floor.get_parent() != shelf.get_parent():
                     continue
-
-                bbox, x_length, y_length, height, center_point = self._compute_bbox_properties(shelf)
-                # transform_matrix = floor.get_local2world_mat()
-                # location = transform_matrix[:, 3][0:3]
-                # floor.set_location(location)
-                # floor.set_rotation_mat(transform_matrix[:3, :3])
+                bbox, x_length, y_length, height, center_point = self._compute_bbox_properties(floor)
                 shelf_floor = suturo_blenderproc.types.shelf.ShelfFloor()
+                shelf_floor.shelf = shelf_object
                 shelf_floor.mesh_object = floor
-                shelf_floor.center = floor.get_location()
+                shelf_floor.center = center_point
                 shelf_floor.x_size = x_length
                 shelf_floor.y_size = y_length
                 shelf_floor.height = height
