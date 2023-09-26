@@ -9,6 +9,17 @@ class PartitionType(Enum):
     LESS_PROBABLE_OBJECTS = auto()
 
 
+def validate_partitions(partition) -> None:
+    assert isinstance(partition, list)
+    for mesh_object in partition:
+        try:
+            mesh_object.get_name()
+        except ReferenceError:
+            partition.remove(mesh_object)
+
+    assert len(partition) > 0
+
+
 class ObjectPartition:
     def __init__(self, num_partitions: int, objects: [bproc.types.MeshObject]):
         if num_partitions <= 1:
