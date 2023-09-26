@@ -123,10 +123,10 @@ def trainsplit(path_source):
 
 
 def rename_images(path_to_new_dir, i=0):
-    data = sorted(os.listdir("/home/sorin/data/storing_groceries/images/"))
+    data = sorted(os.listdir(path_to_new_dir + "/images/"))
     for d in data:
-        os.rename("/home/sorin/data/storing_groceries/images/" + d,
-                  "/home/sorin/data/storing_groceries/images/" + "image" + str(i) + ".jpg")
+        os.rename(path_to_new_dir + "/images/" + d,
+                  path_to_new_dir + "/images/" + "image" + str(i) + ".jpg")
         i = i + 1
 
 
@@ -143,6 +143,6 @@ def write_data_yaml(path_to_json_for_id, new_folder):
 def create_yolo_dataset(id2name_json, coco_annotations, old_dir, new_dir):
     convert_coco_to_yolo(coco_annotations, new_dir)
     move_images_to_new_dir(old_dir, new_dir)
-    rename_images(path_to_new_dir=new_dir + "/images/", i=0)
+    #rename_images(path_to_new_dir=new_dir + "/images/", i=0)
     trainsplit(new_dir + "/")
     write_data_yaml(id2name_json, new_dir)

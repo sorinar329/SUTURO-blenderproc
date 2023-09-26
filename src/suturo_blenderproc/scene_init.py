@@ -1,3 +1,5 @@
+import random
+
 import blenderproc as bproc
 import numpy as np
 
@@ -27,6 +29,8 @@ class SceneInitializer(object):
         self.mesh_objects = bproc.loader.load_blend(
             utils.path_utils.get_path_blender_scene(self.yaml_config.get_scene()))
         self.iterate_through_yaml_obj(self.yaml_config.get_path_to_object_source())
+        self.randomize_materials(self.mesh_objects)
+
         bproc.camera.set_resolution(640, 480)
         #self._set_category_id(path_to_json=self.get_path_to_id2name(), obj_list=self.get_objects2annotate())
         self.scene_collection.update({'Room': self._create_room_from_mesh_objects()})
@@ -44,14 +48,42 @@ class SceneInitializer(object):
         path = self.yaml_config.get_id2name_path()
         return path
 
+    def randomize_materials(self, objs):
+        materials = bproc.material.collect_all()
+        for mat in materials:
+            print("Material:")
+            print(mat.get_name())
+
+        metal = bproc.filter.one_by_attr(materials, "name", "Metal")
+        stylized_wood = bproc.filter.one_by_attr(materials, "name", "Material.stylized_wood")
+        wood_chips = bproc.filter.one_by_attr(materials, "name", "Wood Chips")
+        beam_wall = bproc.filter.one_by_attr(materials, "name", "Beam wall")
+
+        #metal = bproc.filter.one_by_attr(materials, "name", "Metal")
+        mats = [beam_wall, stylized_wood, wood_chips, metal]
+        furnitures =[]
+        for obj in objs:
+            if "Wall" in obj.get_name():
+                furnitures.append(obj)
+            if "Floor" in obj.get_name():
+                furnitures.append(obj)
+            if "Surface" in obj.get_name():
+                furnitures.append(obj)
+            if obj.get_name().split(".") == "Shelf":
+                furnitures.append(obj)
+
+        for furniture in furnitures:
+            furniture.set_material(0, random.choice(mats))
+
+
+
     def get_objects2annotate(self):
         object_names = self.yaml_config.get_objects()
         objects2annotate = []
         for name in object_names:
             objects2annotate.extend(self._get_mesh_objects_by_name(name))
-
-
         return objects2annotate
+
 
     def get_all_mesh_objects(self):
         return self.mesh_objects
@@ -73,14 +105,10 @@ class SceneInitializer(object):
         list_of_new_objects = []
         for obj in self.yaml_config.get_objects():
             if self.check_if_object_is_in_scene(obj):
-                print("ist drin" + str(obj))
                 continue
             else:
-                print("ist nicht drin" + str(obj))
                 path_to_obj = self.get_path_to_obj(obj, path_to_source)
-                print(path_to_obj)
                 new_obj = bproc.loader.load_obj(path_to_obj)
-                print(new_obj)
                 new_obj[0].move_origin_to_bottom_mean_point()
                 new_obj[0].set_name(str(obj))
                 list_of_new_objects.append(new_obj[0])
