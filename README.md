@@ -29,9 +29,15 @@ at `data/yaml/toy_config.yaml`
 # User Configuration
 Within the configuration.yaml file you can tweak all neeeded parameters that are required for the synthetic data generation.
 
+- scene: Choose the scene you want to use for the generation process
 - objects: A list of objects that should be in the scene and annotated.
+- obj_source: path to the objects you want to import into blender.
 - number of camera poses/iterations: Set the number of camera poses and how many times the object sampling should be executed
-- id_path: Path to the json file containing the id's of objects
-- lighting strength: Set the lighting strength for the scene (default 50)
+- path_to_id2name: Path to the json file containing the id's of objects
+- lighting_strength: Set the lighting strength for the scene (default 50)
+- output_path: The path were the images/annotations will be saved.
 - yolo_train: Boolean if you want to train automatically after the dataset is generated (default False).
+- combine_with_existing_dataset: Boolean Combine the converted yolo dataset with an already existing one, only working when yolo_train is set on True.
+- path_to_dataset_that_has_to_be_combined: path to the dataset that you want to combine with the newly generated yolo dataset, only working when combine_with_existing_dataset=True
+
 
