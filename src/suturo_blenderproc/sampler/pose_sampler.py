@@ -152,7 +152,7 @@ class ShelfCameraPoseSampler(CameraPoseSampler):
                         for shelf_floors in shelf.shelf_floors:
                             poi = bproc.object.compute_poi([shelf_floors.mesh_object])
                             self.build_camera_pose(camera_position, poi)
-                        step += 1
+                    step += 1
                 else:
                     print("Camera position is out of bounds")
 
