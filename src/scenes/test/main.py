@@ -43,7 +43,7 @@ def deploy_scene(x: int, scene_initializer: suturo_blenderproc.scene_init.SceneI
 
     hide_render_objects(furnitures, False)
     num_partitions = -(len(objects) // -4)
-    object_partitioner = suturo_blenderproc.sampler.object_partitions
+    object_partitioner = suturo_blenderproc.sampler.object_partitions.ObjectPartition(num_partitions, objects)
     partitions = object_partitioner.create_partition(
         suturo_blenderproc.sampler.object_partitions.PartitionType.LESS_PROBABLE_OBJECTS,
         probability_reduction_factor=0.5)
@@ -59,31 +59,43 @@ def deploy_scene(x: int, scene_initializer: suturo_blenderproc.scene_init.SceneI
     object_pose_sampler = suturo_blenderproc.sampler.pose_sampler.ObjectPoseSampler(
         furnitures=scene_collection.get("Tables"))
     logger.log_component(iteration=0, component="Initialize")
-
+    current_partition = 0
+    surface = object_pose_sampler.get_current_surface()
     for i in range(x):
         light_strength = np.random.choice([10, 20, 40, 30, 50])
-        current_partition = 0
         radius = np.random.uniform(1.6, 2.0)
 
-        surface = object_pose_sampler.get_current_surface()
         light_pose_sampler.set_light_for_furniture(surface, light_strength)
-        bproc.object.sample_poses_on_surface(partitions[current_partition],
-                                             surface.mesh_object,
-                                             object_pose_sampler.sample_object_pose_uniform,
-                                             max_tries=1000, min_distance=0.08, max_distance=0.5,
-                                             up_direction=np.array([0.0, 0.0, 1.0]),
-                                             check_all_bb_corners_over_surface=True
-                                             )
-        validate_partitions(partitions[current_partition])
-        hide_render_objects(partitions[current_partition], False)
-        camera_pose_sampler.sample_camera_poses_circular_table(table_surfaces=[surface], num_poses=3, radius=radius,
-                                                               height=1.5)
-        current_partition += 1
-        if current_partition == num_partitions:
-            current_partition = 0
-            object_pose_sampler.next_surface()
+        surfaces = [surface]
+        if isinstance(surface, suturo_blenderproc.types.shelf.ShelfFloor):
+            while object_pose_sampler.next_surface_same_parent():
+                object_pose_sampler.next_surface()
+                surface = object_pose_sampler.get_current_surface()
+                surfaces.append(surface)
+            print(surfaces)
+            for surface in surfaces:
+                print(surface.mesh_object.get_name())
+            camera_pose_sampler2.sample_circular_cam_poses_shelves(shelf_floors=surfaces)
+        else:
+            camera_pose_sampler.sample_camera_poses_circular_table(table_surfaces=[surface], num_poses=3, radius=radius,
+                                                                   height=1.5)
+        for surface in surfaces:
+            bproc.object.sample_poses_on_surface(partitions[current_partition],
+                                                 surface.mesh_object,
+                                                 object_pose_sampler.sample_object_pose_uniform,
+                                                 max_tries=1000, min_distance=0.08, max_distance=0.5,
+                                                 up_direction=np.array([0.0, 0.0, 1.0]),
+                                                 check_all_bb_corners_over_surface=True
+                                                 )
+            validate_partitions(partitions[current_partition])
+            hide_render_objects(partitions[current_partition], False)
 
-        # camera_pose_sampler2.sample_circular_cam_poses_shelves(num_poses=1, radius=radius, height=1.4)
+            current_partition += 1
+            if current_partition == num_partitions:
+                current_partition = 0
+                object_pose_sampler.next_surface()
+                surface = object_pose_sampler.get_current_surface()
+                break
         logger.log_component(i, "Start rendering")
         data = bproc.renderer.render()
         seg_data = bproc.renderer.render_segmap(map_by=["instance", "class", "name"])
@@ -97,7 +109,8 @@ def deploy_scene(x: int, scene_initializer: suturo_blenderproc.scene_init.SceneI
         bproc.writer.write_hdf5("/home/naser/workspace/SUTURO/SUTURO_WSS/SUTURO-Blenderproc/SUTURO-blenderproc/output",
                                 data)
         logger.log_component(i, "Finished rendering")
-        hide_render_objects(partitions[current_partition], True)
+        for partition in partitions[current_partition - len(surfaces): current_partition]:
+            hide_render_objects(partition, True)
         blenderproc.utility.reset_keyframes()
 
 
@@ -111,7 +124,7 @@ def pipeline():
     # Sollte intern im scene initializer gemacht werden
     # for item in scene_initializer.iterate_through_yaml_obj():
     #     objects.append(item)
-    deploy_scene(10, scene_initializer, logger)
+    deploy_scene(11, scene_initializer, logger)
 
 
 pipeline()
