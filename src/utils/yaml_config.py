@@ -52,3 +52,6 @@ class YAMLConfig(object):
 
     def get_path_to_object_source(self):
         return self._data["obj_source"]
+
+    def get_output_path(self):
+        return self._data["output_path"]

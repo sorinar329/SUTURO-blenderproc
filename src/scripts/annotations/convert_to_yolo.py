@@ -140,9 +140,9 @@ def write_data_yaml(path_to_json_for_id, new_folder):
     f.write("names: " + str(obj_list))
 
 
-def create_yolo_dataset(json_id, json_coco, old_dir, new_dir):
-    convert_coco_to_yolo(json_coco, new_dir)
+def create_yolo_dataset(id2name_json, coco_annotations, old_dir, new_dir):
+    convert_coco_to_yolo(coco_annotations, new_dir)
     move_images_to_new_dir(old_dir, new_dir)
-    rename_images(path_to_new_dir=new_dir + "/images/", i = 0)
+    rename_images(path_to_new_dir=new_dir + "/images/", i=0)
     trainsplit(new_dir + "/")
-    write_data_yaml(json_id, new_dir)
+    write_data_yaml(id2name_json, new_dir)

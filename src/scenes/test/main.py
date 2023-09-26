@@ -107,13 +107,13 @@ def deploy_scene(x, scene_initializer: suturo_blenderproc.scene_init.SceneInitia
         data = bproc.renderer.render()
         seg_data = bproc.renderer.render_segmap(map_by=["instance", "class", "name"])
         bproc.writer.write_coco_annotations(
-            os.path.join("/home/sorin/code/SUTURO-blenderproc/SUTURO-blenderproc/output",
+            os.path.join(config.get_output_path(),
                          'coco_data'),
             instance_segmaps=seg_data["instance_segmaps"],
             instance_attribute_maps=seg_data["instance_attribute_maps"],
             colors=data["colors"],
             color_file_format="JPEG", mask_encoding_format="polygon")
-        bproc.writer.write_hdf5("/home/sorin/code/SUTURO-blenderproc/SUTURO-blenderproc/output",
+        bproc.writer.write_hdf5(config.get_output_path(),
                                 data)
         blenderproc.utility.reset_keyframes()
 

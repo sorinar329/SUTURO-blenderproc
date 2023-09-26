@@ -18,6 +18,8 @@ path_to_dataset_that_has_to_be_combined: "path"
 
 obj_source: "/home/sorin/code/SUTURO-blenderproc/suturo-blenderproc_data/objects/"
 
+output_path: "/home/sorin/code/SUTURO-blenderproc/SUTURO-blenderproc/output"
+
 object_positions:
   first: [ 2.30, -0.4 ]
   second: [ 2.55, -0.4 ]
