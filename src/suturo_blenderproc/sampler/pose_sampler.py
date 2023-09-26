@@ -111,15 +111,17 @@ class ShelfCameraPoseSampler(CameraPoseSampler):
         super().__init__(room=room)
         self.shelves = shelves
 
-    def sample_circular_cam_poses_shelves(self, shelf_floors: [suturo_blenderproc.types.shelf.ShelfFloor] = [],
+    def sample_circular_cam_poses_shelves(self, filter_shelf_floors=None,
                                           num_poses: int = 1, radius: float = 1.5,
                                           height: float = 1.3) -> None:
 
+        if filter_shelf_floors is None:
+            filter_shelf_floors = []
         sample_camera_poses_shelves = self.shelves
 
-        if len(shelf_floors) > 0:
+        if len(filter_shelf_floors) > 0:
             sample_camera_poses_shelves = [shelf for shelf in self.shelves if
-                                           set(shelf.shelf_floors).issubset(set(shelf_floors))]
+                                           set(shelf.shelf_floors).issubset(set(filter_shelf_floors))]
 
         for shelf in sample_camera_poses_shelves:
             step = 0
@@ -142,10 +144,15 @@ class ShelfCameraPoseSampler(CameraPoseSampler):
                 camera_position = np.array([x, y, height])
 
                 if not self.is_position_out_of_bounds(camera_position):
-                    for shelf_floors in shelf.shelf_floors:
-                        poi = bproc.object.compute_poi([shelf_floors.mesh_object])
-                        self.build_camera_pose(camera_position, poi)
-                    step += 1
+                    if len(filter_shelf_floors) > 0:
+                        for shelf_floor in filter_shelf_floors:
+                            poi = bproc.object.compute_poi([shelf_floor.mesh_object])
+                            self.build_camera_pose(camera_position, poi)
+                    else:
+                        for shelf_floors in shelf.shelf_floors:
+                            poi = bproc.object.compute_poi([shelf_floors.mesh_object])
+                            self.build_camera_pose(camera_position, poi)
+                        step += 1
                 else:
                     print("Camera position is out of bounds")
 
@@ -205,23 +212,28 @@ class ObjectPoseSampler:
                self.surfaces[self.current_surface + 1].mesh_object.get_parent()
 
     def next_surface(self) -> None:
-        self.current_surface = (self.current_surface + 1) % self.get_len_surfaces()
+        self.current_surface = self.current_surface + 1
+        if self.current_surface == self.get_len_surfaces():
+            self.current_surface = 0
 
 
 class LightPoseSampler:
     def __init__(self, room: suturo_blenderproc.types.room.Room):
         self.room = room
+        self.lights = []
 
     def set_light_for_furniture(self, surface: suturo_blenderproc.types.entity.Entity, strength=50):
         center = surface.center
-        center[2] = self.room.walls.height - 0.7
+        center[2] = self.room.walls.height - 0.6
         if isinstance(surface, suturo_blenderproc.types.table.TableSurface):
             light = bproc.types.Light()
             light.set_location(center)
             light.set_energy(strength)
+            self.lights.append(light)
+
         if isinstance(surface, suturo_blenderproc.types.shelf.ShelfFloor):
             center = surface.shelf.center
-            center[2] = self.room.walls.height - 0.7
+            center[2] = self.room.walls.height - 0.6
             euler_z = surface.mesh_object.get_rotation_euler()[2]
             if isinstance(surface.mesh_object.get_parent(), bproc.types.Entity):
                 euler_z = surface.mesh_object.get_parent().get_rotation_euler()[2]
@@ -234,3 +246,8 @@ class LightPoseSampler:
             light = bproc.types.Light()
             light.set_location([x, y, center[2]])
             light.set_energy(strength)
+            self.lights.append(light)
+
+    def delete_lights(self) -> None:
+        for light in self.lights:
+            light.delete()
