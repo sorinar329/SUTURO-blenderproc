@@ -29,8 +29,7 @@ class SceneInitializer(object):
         self.mesh_objects = bproc.loader.load_blend(
             utils.path_utils.get_path_blender_scene(self.yaml_config.get_scene()))
         self.iterate_through_yaml_obj(self.yaml_config.get_path_to_object_source())
-        self.randomize_materials(self.mesh_objects)
-
+        #self.randomize_materials(self.mesh_objects)
         bproc.camera.set_resolution(640, 480)
         #self._set_category_id(path_to_json=self.get_path_to_id2name(), obj_list=self.get_objects2annotate())
         self.scene_collection.update({'Room': self._create_room_from_mesh_objects()})
@@ -48,20 +47,9 @@ class SceneInitializer(object):
         path = self.yaml_config.get_id2name_path()
         return path
 
+
     def randomize_materials(self, objs):
-        materials = bproc.material.collect_all()
-        for mat in materials:
-            print("Material:")
-            print(mat.get_name())
-
-        metal = bproc.filter.one_by_attr(materials, "name", "Metal")
-        stylized_wood = bproc.filter.one_by_attr(materials, "name", "Material.stylized_wood")
-        wood_chips = bproc.filter.one_by_attr(materials, "name", "Wood Chips")
-        beam_wall = bproc.filter.one_by_attr(materials, "name", "Beam wall")
-
-        #metal = bproc.filter.one_by_attr(materials, "name", "Metal")
-        mats = [beam_wall, stylized_wood, wood_chips, metal]
-        furnitures =[]
+        furnitures = []
         for obj in objs:
             if "Wall" in obj.get_name():
                 furnitures.append(obj)
@@ -69,13 +57,13 @@ class SceneInitializer(object):
                 furnitures.append(obj)
             if "Surface" in obj.get_name():
                 furnitures.append(obj)
-            if obj.get_name().split(".") == "Shelf":
+            if obj.get_name().split(".")[0] == "Shelf":
                 furnitures.append(obj)
 
         for furniture in furnitures:
-            furniture.set_material(0, random.choice(mats))
-
-
+            print(furniture.get_name())
+            furniture.set_material(0, random.choice(furniture.get_materials()))
+            print(furniture.get_materials()[0].get_name())
 
     def get_objects2annotate(self):
         object_names = self.yaml_config.get_objects()
