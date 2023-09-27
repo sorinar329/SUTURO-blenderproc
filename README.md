@@ -1,12 +1,13 @@
 # SUTURO-blenderproc
 Blenderproc implementation for the SUTURO Project
 # About
-- Einleitung
+- Einleitung, ToDo: Sorin
 ## Object Sampling
-- Randomization Sampling bla bla
+- Randomization Sampling bla bla ToDo: Naser
 ## Camera Sampling
-- POI, Rotation, Position, bla bla bla
+- POI, Rotation, Position, bla bla bla, ToDo: Naser
 # Install
+ToDo: Sorin
 - git clone this one
 - git clone the data folder
   
@@ -20,6 +21,7 @@ where config_yaml should be any yaml file located at data/yaml. Which scene
 you wish to render, should be set in yaml file with the file `scene`. Take a look
 at `data/yaml/toy_config.yaml`
 # HowTo
+ToDo: Sorin
 ## How to include new objects into the synthetic data generation?
 
 ## How to start the process of synthetic data generation?
