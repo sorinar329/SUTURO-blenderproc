@@ -2,6 +2,9 @@
 Blenderproc implementation for the SUTURO Project
 # About
 - Einleitung, ToDo: Sorin
+
+The Suturo Blenderproc Synthetic Data-generation is a tool created for the Suturo project, based on the blenderproc framework, that generates a dataset for model training by considering some parameters.
+This method should ease the process of acquiring annotated data in a high amount, relatively fast and without manually annotation. The output of this tool is a dataset that contains segmentation masks and bounding boxes for all objects in the data. The parameters that can be configured are for example the wanted objects, the scene, lighting strength and more, this can be read in the User Configuration section.
 ## Object Sampling
 - Randomization Sampling bla bla ToDo: Naser
 ## Camera Sampling
