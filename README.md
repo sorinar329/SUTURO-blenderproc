@@ -10,12 +10,8 @@ This method should ease the process of acquiring annotated data in a high amount
 ## Camera Sampling
 - POI, Rotation, Position, bla bla bla, ToDo: Naser
 # Install
-ToDo: Sorin
-- git clone this one
-- git clone the data folder
-
 In order to run the tool, you need to create a new directory and clone two repositories into it, both repos has to be in the same directory.
-~ mkdir ~/workspace/Suturo_blenderproc
+`mkdir ~/workspace/Suturo_blenderproc´
 ~ cd ~/workspace/Suturo_blenderproc
 ~ git clone this
 ~ git clone data
