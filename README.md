@@ -13,16 +13,19 @@ This method should ease the process of acquiring annotated data in a high amount
 ToDo: Sorin
 - git clone this one
 - git clone the data folder
-  
-Pls put the SUTURO-blenderproc and the the project with scenes in a workspace. 
 
-To run the test pipeline you can type the following command in the CLI:
+In order to run the tool, you need to create a new directory and clone two repositories into it, both repos has to be in the same directory.
+~ mkdir ~/workspace/Suturo_blenderproc
+~ cd ~/workspace/Suturo_blenderproc
+~ git clone this
+~ git clone data
+
+HIER ORDNERSTRUKTUR ERKLÄREN?
+
+To run the pipeline you have to configure the configuration.yaml file situated in PATHTOCONFIG, please refer to the User Configuration section for more information regarding the configuration.
+After everything is set up you can run the following command in the Command Line Interface:
 
 `blenderproc run main.py --config_yaml toy_config`
-
-where config_yaml should be any yaml file located at data/yaml. Which scene
-you wish to render, should be set in yaml file with the file `scene`. Take a look
-at `data/yaml/toy_config.yaml`
 # HowTo
 ToDo: Sorin
 ## How to include new objects into the synthetic data generation?
