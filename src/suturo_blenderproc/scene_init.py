@@ -124,6 +124,7 @@ class SceneInitializer(object):
                 table_surface.height = height
                 table_surface.center = center_point
                 table_surface.mesh_object = mesh_object
+                print(mesh_object.get_name())
                 for sibling in siblings:
                     if "tablelegs" in sibling.get_name().lower():
                         table_legs = suturo_blenderproc.types.table.TableLegs()
@@ -156,7 +157,7 @@ class SceneInitializer(object):
                         shelf_floor.height = height
                         shelf.shelf_floors.append(shelf_floor)
                 res.append(shelf)
-            return res
+        return res
 
     def _create_table_from_mesh_objects(self):
         tables = self._get_mesh_objects_by_name("Table")
