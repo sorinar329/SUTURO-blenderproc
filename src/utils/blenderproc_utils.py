@@ -1,6 +1,8 @@
 import blenderproc as bproc
 import numpy as np
 
+import utils.yaml_config
+
 
 def hide_mesh_objects(mesh_objects: [bproc.types.MeshObject], render: bool):
     for mesh_object in mesh_objects:
@@ -14,7 +16,24 @@ def randomize_materials(mesh_objects: [bproc.types.MeshObject]):
         print(furniture.get_materials()[0].get_name())
 
 
-def build_camera_pose(camera_position, poi):
-    rotation_matrix = bproc.camera.rotation_from_forward_vec(poi - np.array(camera_position))
-    cam2world_matrix = bproc.math.build_transformation_mat(camera_position, rotation_matrix)
-    bproc.camera.add_camera_pose(cam2world_matrix)
+def set_random_rotation_euler_zaxis(mesh_object: bproc.types.MeshObject):
+    rotation = np.random.uniform([0, 0, 0], [0, 0, 360])
+    rotation = np.radians(rotation)
+    mesh_object.set_rotation_euler(mesh_object.get_rotation_euler() + rotation)
+
+
+def duplicate_objects(object_list: [bproc.types.MeshObject], config: utils.yaml_config.YAMLConfig):
+    num_duplicate = config.get_duplicate_objects()
+    duplicated_objects = []
+
+    if isinstance(num_duplicate, int):
+        for o in object_list:
+            duplicated_objects.append(o)
+            for _ in range(num_duplicate):
+                duplicated_object = o.duplicate()
+                duplicated_objects.append(duplicated_object)
+
+    if isinstance(num_duplicate, dict):
+        num_duplicate = [v for k, v in num_duplicate.items()]
+
+    return duplicated_objects
