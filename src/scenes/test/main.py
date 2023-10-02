@@ -33,9 +33,8 @@ config = utils.yaml_config.YAMLConfig(filename=args.config_yaml)
 def deploy_scene(x: int, scene_initializer: suturo_blenderproc.scene_init.SceneInitializer, logger: Logger):
     hide_mesh_objects(scene_initializer.get_all_mesh_objects(), True)
     objects = scene_initializer.get_objects2annotate()
-    #objects = utils.blenderproc_utils.duplicate_objects(objects, config)
-    #hide_mesh_objects(objects, True)
-    print(len(objects))
+    objects = utils.blenderproc_utils.duplicate_objects(objects, config)
+    hide_mesh_objects(objects, True)
     scene_collection = scene_initializer.get_scene_collection()
     furnitures = []
     room = scene_collection.get("Room")[0]
@@ -58,7 +57,7 @@ def deploy_scene(x: int, scene_initializer: suturo_blenderproc.scene_init.SceneI
     light_pose_sampler = suturo_blenderproc.sampler.pose_sampler.LightPoseSampler(room=room)
 
     object_pose_sampler = suturo_blenderproc.sampler.pose_sampler.ObjectPoseSampler(
-        furnitures=scene_collection.get("Shelves") + scene_collection.get("Tables"))
+        furnitures=scene_collection.get("Tables") + scene_collection.get("Shelves"))
     logger.log_component(iteration=0, component="Initialize")
     current_partition = 0
     surface = object_pose_sampler.get_current_surface()
@@ -67,19 +66,18 @@ def deploy_scene(x: int, scene_initializer: suturo_blenderproc.scene_init.SceneI
 
     for i in range(x):
         utils.blenderproc_utils.randomize_materials(furnitures)
-
-        light_strength = np.random.choice([10, 30, 40, 50, 100])
+        lights_strength = np.random.choice([10, 30, 40, 50, 100])
         radius = np.random.choice(np.linspace(start=1.6, stop=2.2, num=20))
         height = np.random.choice(np.linspace(start=1.4, stop=1.8, num=8))
         if isinstance(surface, suturo_blenderproc.types.shelf.ShelfFloor):
             while object_pose_sampler.next_surface_same_parent():
                 object_pose_sampler.next_surface()
                 surfaces.append(object_pose_sampler.get_current_surface())
+        light = light_pose_sampler.sample_light_for_furniture(surface, lights_strength)
         camera_pose_sampler.sample_circular_camera_poses_list(surfaces=[surface],
                                                               num_poses=3,
                                                               radius=radius,
                                                               height=height)
-        light_pose_sampler.set_light_for_furniture(surfaces[0], light_strength)
         for s in surfaces:
             bproc.object.sample_poses_on_surface(partitions[current_partition],
                                                  s.mesh_object,
@@ -107,16 +105,14 @@ def deploy_scene(x: int, scene_initializer: suturo_blenderproc.scene_init.SceneI
             instance_segmaps=seg_data["instance_segmaps"],
             instance_attribute_maps=seg_data["instance_attribute_maps"],
             colors=data["colors"],
-            color_file_format="JPEG")
-        # bproc.writer.write_hdf5(config.get_output_path(),
-        #                         data, append_to_existing_output=True)
+            color_file_format="JPEG",
+            append_to_existing_output=True)
+
         logger.log_component(i, "Finished rendering")
         for index in partition_indices:
             hide_mesh_objects(partitions[index], True)
-
+        light.delete()
         partition_indices = []
-
-        light_pose_sampler.delete_lights()
         blenderproc.utility.reset_keyframes()
 
 
@@ -129,7 +125,7 @@ def pipeline():
                                                                        path_id2name=config.get_id2name_path())
 
     scene_initializer.initialize_scene()
-    deploy_scene(100, scene_initializer, logger)
+    deploy_scene(50, scene_initializer, logger)
 
     if config.get_yolo_training():
         create_yolo_dataset(config.get_id2name_path(), config.get_output_path() + "/coco_data/coco_annotations.json",
