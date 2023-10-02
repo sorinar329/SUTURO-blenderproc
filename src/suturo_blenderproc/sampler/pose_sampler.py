@@ -59,7 +59,6 @@ class CameraPoseSampler:
         while step != num_poses:
             angle = np.random.randint(360 / 5) * 5
             camera_position = utils.math_utils.position_2D_circle(angle, radius, height, table_surface.center)
-            print(f"Camera is currently located at: {camera_position}")
             if self.build_camera_pose(camera_position, bproc.object.compute_poi([table_surface.mesh_object])):
                 step += 1
 
@@ -80,7 +79,6 @@ class CameraPoseSampler:
             deg_z = np.rad2deg(euler_z) - 90
             new_angle = np.random.randint(low=deg_z - 30, high=deg_z + 30)
             camera_position = utils.math_utils.position_2D_circle(new_angle, radius, height, shelf.center)
-            print(f"Camera is currently located at: {camera_position}")
 
             if self.build_camera_pose(camera_position, bproc.object.compute_poi([shelf.mesh_object])):
                 step += 1
@@ -100,7 +98,7 @@ class CameraPoseSampler:
 
 
 class ObjectPoseSampler:
-    def __init__(self, furnitures: [suturo_blenderproc.types.entity.Entity], std: Optional[float]):
+    def __init__(self, furnitures: [suturo_blenderproc.types.entity.Entity], std: Optional[float] = 0):
         self.surfaces = extract_surfaces_from_furnitures(furnitures)
         self.current_surface = 0
         self.std = std
