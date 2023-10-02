@@ -149,7 +149,8 @@ class LightPoseSampler:
             light.set_location(np.append(center[:2], height))
             light.set_energy(strength)
 
-        if isinstance(surface, suturo_blenderproc.types.shelf.ShelfFloor):
+        if isinstance(surface, suturo_blenderproc.types.shelf.ShelfFloor) \
+                or isinstance(surface, suturo_blenderproc.types.shelf.Shelf):
             euler_z = surface.mesh_object.get_rotation_euler()[2]
             if isinstance(surface.mesh_object.get_parent(), bproc.types.Entity):
                 euler_z = surface.mesh_object.get_parent().get_rotation_euler()[2]
@@ -158,6 +159,7 @@ class LightPoseSampler:
 
             light.set_location(lights_position)
             light.set_energy(strength)
+
         self.lights.append(light)
 
     def delete_lights(self) -> None:
