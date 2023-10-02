@@ -26,6 +26,9 @@ class YAMLConfig(object):
     def get_objects(self):
         return self._data['objects']
 
+    def get_duplicate_objects(self):
+        return self._data['duplicate_objects']
+
     def get_scene(self):
         return self._data['scene']
 
