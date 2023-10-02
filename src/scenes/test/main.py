@@ -33,8 +33,8 @@ config = utils.yaml_config.YAMLConfig(filename=args.config_yaml)
 def deploy_scene(x: int, scene_initializer: suturo_blenderproc.scene_init.SceneInitializer, logger: Logger):
     hide_mesh_objects(scene_initializer.get_all_mesh_objects(), True)
     objects = scene_initializer.get_objects2annotate()
-    objects = utils.blenderproc_utils.duplicate_objects(objects, config)
-    hide_mesh_objects(objects, True)
+    #objects = utils.blenderproc_utils.duplicate_objects(objects, config)
+    #hide_mesh_objects(objects, True)
     print(len(objects))
     scene_collection = scene_initializer.get_scene_collection()
     furnitures = []
