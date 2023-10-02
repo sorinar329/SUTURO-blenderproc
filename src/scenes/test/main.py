@@ -75,7 +75,7 @@ def deploy_scene(x: int, scene_initializer: suturo_blenderproc.scene_init.SceneI
                 surfaces.append(object_pose_sampler.get_current_surface())
         light = light_pose_sampler.sample_light_for_furniture(surface, lights_strength)
         camera_pose_sampler.sample_circular_camera_poses_list(surfaces=[surface],
-                                                              num_poses=3,
+                                                              num_poses=config.get_number_of_camera_samples(),
                                                               radius=radius,
                                                               height=height)
         for s in surfaces:
@@ -125,7 +125,7 @@ def pipeline():
                                                                        path_id2name=config.get_id2name_path())
 
     scene_initializer.initialize_scene()
-    deploy_scene(50, scene_initializer, logger)
+    deploy_scene(config.get_number_of_iterations(), scene_initializer, logger)
 
     if config.get_yolo_training():
         create_yolo_dataset(config.get_id2name_path(), config.get_output_path() + "/coco_data/coco_annotations.json",
