@@ -17,8 +17,7 @@ def randomize_materials(mesh_objects: [bproc.types.MeshObject]):
 
 
 def set_random_rotation_euler_zaxis(mesh_object: bproc.types.MeshObject):
-    rotation = np.random.uniform([0, 0, 0], [0, 0, 360])
-    rotation = np.radians(rotation)
+    rotation = np.random.uniform([0, 0, 0], [0, 0, 6])
     mesh_object.set_rotation_euler(mesh_object.get_rotation_euler() + rotation)
 
 
