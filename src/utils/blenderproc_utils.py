@@ -28,7 +28,7 @@ def duplicate_objects(object_list: [bproc.types.MeshObject], config: utils.yaml_
     if isinstance(num_duplicate, int):
         for o in object_list:
             duplicated_objects.append(o)
-            for _ in range(num_duplicate):
+            for _ in range(num_duplicate - 1):
                 duplicated_object = o.duplicate()
                 duplicated_objects.append(duplicated_object)
 
