@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, Optional
 
 import blenderproc as bproc
 import numpy as np
@@ -100,9 +100,10 @@ class CameraPoseSampler:
 
 
 class ObjectPoseSampler:
-    def __init__(self, furnitures: [suturo_blenderproc.types.entity.Entity]):
+    def __init__(self, furnitures: [suturo_blenderproc.types.entity.Entity], std: Optional[float]):
         self.surfaces = extract_surfaces_from_furnitures(furnitures)
         self.current_surface = 0
+        self.std = std
 
     def sample_object_pose_uniform(self, obj: bproc.types.MeshObject) -> None:
         surface = self.surfaces[self.current_surface]
@@ -113,6 +114,16 @@ class ObjectPoseSampler:
         lower_bound = np.append(lower_corner, height)
         upper_bound = np.append(upper_corner, height)
         object_pose = np.random.uniform(lower_bound, upper_bound)
+        obj.set_location(object_pose)
+        utils.blenderproc_utils.set_random_rotation_euler_zaxis(obj)
+
+    def sample_object_pose_gaussian(self, obj: bproc.types.MeshObject) -> None:
+        surface = self.surfaces[self.current_surface]
+        mean = surface.center
+        covariance = np.array([[self.std, 0], [0, self.std]])
+        height = surface.height
+        position_xy = np.random.multivariate_normal(mean=mean, cov=covariance)
+        object_pose = np.append(position_xy, height)
         obj.set_location(object_pose)
         utils.blenderproc_utils.set_random_rotation_euler_zaxis(obj)
 
@@ -138,9 +149,9 @@ class ObjectPoseSampler:
 class LightPoseSampler:
     def __init__(self, room: suturo_blenderproc.types.room.Room):
         self.room = room
-        self.lights = []
 
-    def set_light_for_furniture(self, surface: suturo_blenderproc.types.entity.Entity, strength=50) -> None:
+    def sample_light_for_furniture(self, surface: suturo_blenderproc.types.entity.Entity,
+                                   strength: float) -> bproc.types.Light:
         center = surface.center
         height = self.room.walls.height - 0.6
         light = bproc.types.Light()
@@ -160,8 +171,4 @@ class LightPoseSampler:
             light.set_location(lights_position)
             light.set_energy(strength)
 
-        self.lights.append(light)
-
-    def delete_lights(self) -> None:
-        for light in self.lights:
-            light.delete()
+        return light
