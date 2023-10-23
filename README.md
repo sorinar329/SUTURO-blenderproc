@@ -8,17 +8,29 @@ This method should ease the process of acquiring annotated data in a high amount
 ## Camera Sampling
 - POI, Rotation, Position, bla bla bla, ToDo: Naser
 # Install
-In order to run the tool, you need to create a new directory and clone two repositories into it, both repos has to be in the same directory.
+This framework was tested on Ubuntu 20.04
+
+## Set Up Workspace
+In order to run the framework, you need to create a new directory and clone two repositories into it, both repos has to be in the same directory.
 
 `mkdir ~/workspace/Suturo_blenderproc`
 
 `cd ~/workspace/Suturo_blenderproc`
 
-- git clone this
+- git clone https://github.com/sorinar329/SUTURO-blenderproc
 
-- git clone data
+- git clone https://gitlab.informatik.uni-bremen.de/sorin/suturo-blenderproc_data
 
-HIER ORDNERSTRUKTUR ERKLÄREN?
+## Create a new Virtual Environment (optional)
+Optionally you can create a new virtual env for this project. 
+
+`python3 -m venv ~/workspace/Suturo_blenderproc/SUTURO-blenderproc/YOURENVNAME`
+
+activate your new created virtual environment
+
+`source ~/workspace/Suturo_blenderproc/SUTURO-blenderproc/YOURENVNAME/bin/activate`
+
+
 
 To run the pipeline you have to configure the configuration.yaml file situated in PATHTOCONFIG, please refer to the User Configuration section for more information regarding the configuration.
 After everything is set up you can run the following command in the Command Line Interface:
@@ -47,3 +59,7 @@ Within the configuration.yaml file you can tweak all neeeded parameters that are
 - path_to_dataset_that_has_to_be_combined: path to the dataset that you want to combine with the newly generated yolo dataset, only working when combine_with_existing_dataset=True
 
 
+# TODO:
+- Dieses Duplicate einbauen
+- Relative Pfade für die YAML erstellen
+- Exception für die Materialänderung falls dieses Material nicht existiert.
