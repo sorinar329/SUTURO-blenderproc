@@ -36,7 +36,7 @@ Now you can install the required packages from the requirments.txt
 
 
 ## Run the Pipeline
-To run the pipeline you have to configure the configuration.yaml file situated in PATHTOCONFIG, please refer to the User Configuration section for more information regarding the configuration.
+To run the pipeline you have to configure the configuration.yaml file situated in `~/workspace/Suturo_blenderproc/SUTURO-blenderproc/data/yaml` , please refer to the User Configuration section for more information regarding the configuration.
 After everything is set up you can run the following command in the Command Line Interface:
 
 `blenderproc run main.py --config_yaml toy_config`
