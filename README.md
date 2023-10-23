@@ -54,7 +54,8 @@ To run the pipeline you have to configure the configuration.yaml file situated i
 After everything is set up you can run the following command in the Command Line Interface:
 
 `blenderproc run main.py --config_yaml toy_config`
-## How to train on the newly generated data
+## How to create a dataset for YOLO-Training?
+
 
 # User Configuration
 Within the configuration.yaml file you can tweak all neeeded parameters that are required for the synthetic data generation.
