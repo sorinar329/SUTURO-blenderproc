@@ -30,8 +30,12 @@ activate your new created virtual environment
 
 `source ~/workspace/Suturo_blenderproc/SUTURO-blenderproc/YOURENVNAME/bin/activate`
 
+Now you can install the required packages from the requirments.txt
+
+`pip install -r ~/workspace/Suturo_blenderproc/SUTURO-blenderproc/requirements.txt`
 
 
+## Run the Pipeline
 To run the pipeline you have to configure the configuration.yaml file situated in PATHTOCONFIG, please refer to the User Configuration section for more information regarding the configuration.
 After everything is set up you can run the following command in the Command Line Interface:
 
@@ -63,3 +67,4 @@ Within the configuration.yaml file you can tweak all neeeded parameters that are
 - Dieses Duplicate einbauen
 - Relative Pfade für die YAML erstellen
 - Exception für die Materialänderung falls dieses Material nicht existiert.
+- Requirments.txt an richtige Stelle bringen.
