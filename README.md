@@ -69,3 +69,4 @@ Within the configuration.yaml file you can tweak all neeeded parameters that are
 - Exception für die Materialänderung falls dieses Material nicht existiert.
 - Requirments.txt an richtige Stelle bringen.
 - Textures applyien auf die fehlenden Objekte
+- Die Materialien einbauen für die einzelnen Objekte die das benötigen.
