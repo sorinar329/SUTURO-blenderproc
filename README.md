@@ -67,7 +67,8 @@ Within the configuration.yaml file you can tweak all neeeded parameters that are
 - path_to_id2name: Path to the json file containing the id's of objects
 - lighting_strength: Set the lighting strength for the scene (default 50)
 - output_path: The path were the images/annotations will be saved.
-- yolo_train: Boolean if you want to train automatically after the dataset is generated (default False).
+- yolo_dataset: Boolean if you want to create automatically a dataset in yolo format(default False).
+- yolo_save_path: The path where you want to save your yolo dataset.
 - combine_with_existing_dataset: Boolean Combine the converted yolo dataset with an already existing one, only working when yolo_train is set on True.
 - path_to_dataset_that_has_to_be_combined: path to the dataset that you want to combine with the newly generated yolo dataset, only working when combine_with_existing_dataset=True
 
