@@ -33,19 +33,27 @@ activate your new created virtual environment
 Now you can install the required packages from the requirments.txt
 
 `pip install -r ~/workspace/Suturo_blenderproc/SUTURO-blenderproc/requirements.txt`
+# HowTo
+ToDo: Sorin
+## How to see which objects are already in the scene
+To see which objects are already in the scene you should look at the blender scene itself and the objects folder `~/workspace/Suturo_blenderproc/suturo_blenderproc_data/objects`.
+Standartwise we will inlcude all relevant YCB-Objects into the scenes.
+## Where do i get more objects?
+There are plenty of sources availabe for different type of objects.
+- For furnitures you should take a look at the blender library https://www.blenderkit.com/.
+- For the YCB objects we used http://ycb-benchmarks.s3-website-us-east-1.amazonaws.com/
+- If you want to scan your own products we advise you to use the App https://poly.cam/
+- Also the PolyCam library can be a good source for different objects which are scanned by other users.
+## How to import new objects into the synthetic data generation?
+To include new objects into the scene, simply paste the objects into `~/workspace/Suturo_blenderproc/suturo_blenderproc_data/objects`.
+If not already inlcuded in the id2name.json you have to include it there as well with the same name as the object.
+At the moment only "*.glb" files are supported for import, this is the file format you will get when scanning objects with PolyCAM.
 
-
-## Run the Pipeline
+## How to start the process of synthetic data generation?
 To run the pipeline you have to configure the configuration.yaml file situated in `~/workspace/Suturo_blenderproc/SUTURO-blenderproc/data/yaml` , please refer to the User Configuration section for more information regarding the configuration.
 After everything is set up you can run the following command in the Command Line Interface:
 
 `blenderproc run main.py --config_yaml toy_config`
-# HowTo
-ToDo: Sorin
-## How to include new objects into the synthetic data generation?
-
-## How to start the process of synthetic data generation?
-
 ## How to train on the newly generated data
 
 # User Configuration
