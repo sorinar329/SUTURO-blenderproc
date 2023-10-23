@@ -55,7 +55,7 @@ After everything is set up you can run the following command in the Command Line
 
 `blenderproc run main.py --config_yaml toy_config`
 ## How to create a dataset for YOLO-Training?
-
+Simply set the the yolo_dataset boolean in the User Configuration to true and set a save_path also in the User Config.
 
 # User Configuration
 Within the configuration.yaml file you can tweak all neeeded parameters that are required for the synthetic data generation.
