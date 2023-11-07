@@ -13,7 +13,7 @@ This framework was tested on Ubuntu 20.04
 ## Set Up Workspace
 In order to run the framework, you need to create a new directory and clone two repositories into it, both repos has to be in the same directory.
 
-`mkdir ~/workspace/Suturo_blenderproc`
+`mkdir -p ~/workspace/Suturo_blenderproc`
 
 `cd ~/workspace/Suturo_blenderproc`
 
