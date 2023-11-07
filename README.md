@@ -13,9 +13,9 @@ This framework was tested on Ubuntu 20.04
 ## Set Up Workspace
 In order to run the framework, you need to create a new directory and clone two repositories into it, both repos has to be in the same directory.
 
-`mkdir -p ~/workspace/Suturo_blenderproc`
+`mkdir -p ~/workspace/SUTURO-blenderproc`
 
-`cd ~/workspace/Suturo_blenderproc`
+`cd ~/workspace/SUTURO-blenderproc`
 
 - git clone https://github.com/sorinar329/SUTURO-blenderproc
 
@@ -24,19 +24,19 @@ In order to run the framework, you need to create a new directory and clone two 
 ## Create a new Virtual Environment (optional)
 Optionally you can create a new virtual env for this project. 
 
-`python3 -m venv ~/workspace/Suturo_blenderproc/SUTURO-blenderproc/YOURENVNAME`
+`python3 -m venv ~/workspace/SUTURO-blenderproc/SUTURO-blenderproc/YOURENVNAME`
 
 activate your new created virtual environment
 
-`source ~/workspace/Suturo_blenderproc/SUTURO-blenderproc/YOURENVNAME/bin/activate`
+`source ~/workspace/SUTURO-blenderproc/SUTURO-blenderproc/YOURENVNAME/bin/activate`
 
 Now you can install the required packages from the requirments.txt (fehlt)
 
-`pip install -r ~/workspace/Suturo_blenderproc/SUTURO-blenderproc/requirements.txt`
+`pip install -r ~/workspace/SUTURO-blenderproc/SUTURO-blenderproc/requirements.txt`
 # HowTo
 ToDo: Sorin
 ## How to see which objects are already in the scene
-To see which objects are already in the scene you should look at the blender scene itself and the objects folder `~/workspace/Suturo_blenderproc/suturo_blenderproc_data/objects`.
+To see which objects are already in the scene you should look at the blender scene itself and the objects folder `~/workspace/SUTURO-blenderproc/suturo_blenderproc_data/objects`.
 Standartwise we will inlcude all relevant YCB-Objects into the scenes.
 ## Where do i get more objects?
 There are plenty of sources availabe for different type of objects.
@@ -45,7 +45,7 @@ There are plenty of sources availabe for different type of objects.
 - If you want to scan your own products we advise you to use the App https://poly.cam/
 - Also the PolyCam library can be a good source for different objects which are scanned by other users.
 ## How to import new objects into the synthetic data generation?
-To include new objects into the scene, simply paste the objects into `~/workspace/Suturo_blenderproc/suturo_blenderproc_data/objects`.
+To include new objects into the scene, simply paste the objects into `~/workspace/SUTURO-blenderproc/suturo_blenderproc_data/objects`.
 If not already inlcuded in the id2name.json you have to include it there as well with the same name as the object.
 At the moment only "*.glb" files are supported for import, this is the file format you will get when scanning objects with PolyCAM.
 
