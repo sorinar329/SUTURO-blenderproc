@@ -30,7 +30,7 @@ activate your new created virtual environment
 
 `source ~/workspace/Suturo_blenderproc/SUTURO-blenderproc/YOURENVNAME/bin/activate`
 
-Now you can install the required packages from the requirments.txt
+Now you can install the required packages from the requirments.txt (fehlt)
 
 `pip install -r ~/workspace/Suturo_blenderproc/SUTURO-blenderproc/requirements.txt`
 # HowTo
