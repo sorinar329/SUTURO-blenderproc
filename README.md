@@ -56,7 +56,9 @@ After everything is set up you can run the following command in the Command Line
 `blenderproc run main.py --config_yaml toy_config`
 ## How to create a dataset for YOLO-Training?
 Simply set the the yolo_dataset boolean in the User Configuration to true and set a save_path also in the User Config.
-
+# Material Manipulation
+In order to create higher data variety, surfaces on which the objects are placed would change material. This method is standartly applied to furnitures in the kitchen scene, but in this chapter we will give a brief tutorial how to include material manipulation in new scenes.
+Every furniture object in Blender has a standart material texture, in order to switch between those while generating data just add more materials by clicking the "+" symbol and choose one material that is already in the scene, you can also find materials from BlenderKit's library.
 # User Configuration
 Within the configuration.yaml file you can tweak all neeeded parameters that are required for the synthetic data generation.
 
