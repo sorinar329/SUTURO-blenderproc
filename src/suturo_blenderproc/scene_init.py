@@ -116,7 +116,6 @@ class SceneInitializer(object):
                 table_surface.height = height
                 table_surface.center = center_point
                 table_surface.mesh_object = mesh_object
-                print(mesh_object.get_name())
                 for sibling in siblings:
                     if "tablelegs" in sibling.get_name().lower():
                         table_legs = types.table.TableLegs()
