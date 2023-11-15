@@ -109,10 +109,10 @@ def trainsplit(path_source):
     annotations.sort()
 
     # Split the dataset into train-valid-test splits
-    train_images, val_images, train_annotations, val_annotations = train_test_split(images, annotations, test_size=0.05,
+    train_images, val_images, train_annotations, val_annotations = train_test_split(images, annotations, test_size=0.1, train_size=0.8,
                                                                                     random_state=1)
     val_images, test_images, val_annotations, test_annotations = train_test_split(val_images, val_annotations,
-                                                                                  test_size=0.05, random_state=1)
+                                                                                  train_size=0.8,test_size=0.1, random_state=1)
 
     move_files_to_folder(train_images, path_source + "train/images")
     move_files_to_folder(val_images, path_source + "val/images")
@@ -123,10 +123,10 @@ def trainsplit(path_source):
 
 
 def rename_images(path_to_new_dir, i=0):
-    data = sorted(os.listdir(path_to_new_dir + "/images/"))
+    data = sorted(os.listdir(path_to_new_dir))
     for d in data:
-        os.rename(path_to_new_dir + "/images/" + d,
-                  path_to_new_dir + "/images/" + "image" + str(i) + ".jpg")
+        os.rename(path_to_new_dir + d,
+                  path_to_new_dir + "image" + str(i) + ".jpg")
         i = i + 1
 
 
@@ -143,6 +143,6 @@ def write_data_yaml(path_to_json_for_id, new_folder):
 def create_yolo_dataset(id2name_json, coco_annotations, old_dir, new_dir):
     convert_coco_to_yolo(coco_annotations, new_dir)
     move_images_to_new_dir(old_dir, new_dir)
-    #rename_images(path_to_new_dir=new_dir + "/images/", i=0)
+    rename_images(path_to_new_dir=new_dir + "/images/", i=0)
     trainsplit(new_dir + "/")
     write_data_yaml(id2name_json, new_dir)
