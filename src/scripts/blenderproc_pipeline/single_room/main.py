@@ -7,7 +7,7 @@ while p.stem != "src":
     p = p.parent
 
 sys.path.append(str(p))
-from suturo_blenderproc.utils.logger import Logger
+from suturo_blenderproc.logger.logger import Logger
 import suturo_blenderproc.utils.yaml_config as yaml_config
 import suturo_blenderproc.scene_init
 from suturo_blenderproc.sampler.pose_sampler import CameraPoseSampler, LightPoseSampler, ObjectPoseSampler
