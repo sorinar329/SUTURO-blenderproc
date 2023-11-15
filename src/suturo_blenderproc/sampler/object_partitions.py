@@ -13,6 +13,7 @@ def validate_partitions(partition) -> None:
     assert isinstance(partition, list)
     for mesh_object in partition:
         try:
+            assert isinstance(mesh_object, bproc.types.MeshObject)
             mesh_object.get_name()
         except ReferenceError:
             partition.remove(mesh_object)
@@ -21,16 +22,20 @@ def validate_partitions(partition) -> None:
 
 
 class ObjectPartition:
-    def __init__(self, num_partitions: int, objects: [bproc.types.MeshObject]):
-        if num_partitions <= 1:
-            raise AssertionError("The minimum amount of partitions should be at least 2")
-
-        self.num_partitions = num_partitions
+    def __init__(self, num_partitions: int = 0, partitions_with_size: int = 0,
+                 objects: [bproc.types.MeshObject] = None):
+        if num_partitions > 0:
+            self.num_partitions = num_partitions
+        elif partitions_with_size > 0:
+            self.num_partitions = -(len(objects) // partitions_with_size)
+        else:
+            raise ValueError("Set number of partitions or set limit size of partitions")
         self.objects = objects
         self._partitions = None
 
         if len(self.objects) - len(self.objects) % self.num_partitions == 0:
-            raise ValueError("Partitions size is set to high in comparison to objects list lenght")
+            raise ValueError("Please provide either the number of partitions ('num_partitions') "
+                             "or the limit size of partitions ('partitions_with_size').")
 
     def create_partition(self, partition_type: PartitionType,
                          probability_reduction_factor: float = 0.99) -> [[bproc.types.MeshObject]]:

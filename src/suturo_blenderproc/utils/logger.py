@@ -1,7 +1,6 @@
 import logging
 import time
 
-
 class Logger:
     def __init__(self):
         logging.basicConfig(filename='logfile.log', level=logging.INFO)

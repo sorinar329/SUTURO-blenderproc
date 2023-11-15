@@ -1,5 +1,5 @@
 import yaml
-from utils import path_utils
+from suturo_blenderproc.utils import path_utils
 
 
 class YAMLConfig(object):
@@ -38,8 +38,8 @@ class YAMLConfig(object):
     def get_id2name_path(self):
         return self._data["path_to_id2name"]
 
-    def get_number_of_camera_samples(self):
-        return self._data["number_of_camera_samples"]
+    def get_number_of_camera_poses(self):
+        return self._data["number_of_camera_poses"]
 
     def get_yolo_training(self):
         return self._data["yolo_train"]

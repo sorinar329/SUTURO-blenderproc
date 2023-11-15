@@ -12,13 +12,6 @@ def get_suturo_blenderproc_path():
     return p.parent
 
 
-def get_path_id2name_json():
-    p = Path.cwd().joinpath(get_suturo_blenderproc_path(), "data", "id2name.json")
-    if not p.exists():
-        raise Exception("id2name.json doesn't exist")
-    return p
-
-
 def get_path_yaml_config(filename):
     p = Path.cwd().joinpath(get_suturo_blenderproc_path(), "data/yaml", filename)
     if p.suffix != ".yaml":
@@ -38,13 +31,6 @@ def get_project_src_dir():
     while p.stem != "src":
         p = p.parent
 
-    return p
-
-
-def get_path_output_dir():
-    p = Path.cwd().joinpath(get_suturo_blenderproc_path(), "output")
-    if not p.exists():
-        Path(p).mkdir(parents=True)
     return p
 
 

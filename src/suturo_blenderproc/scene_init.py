@@ -1,19 +1,15 @@
 import blenderproc as bproc
-import numpy as np
-
-import suturo_blenderproc.types.room
-import suturo_blenderproc.types.shelf
-import suturo_blenderproc.types.table
-import utils.path_utils
-import utils.math_utils
+import suturo_blenderproc.types as types
+import suturo_blenderproc.utils as utils
+import suturo_blenderproc.utils.math_utils
 import json
 import re
 
 
 class SceneInitializer(object):
-    def __init__(self, yaml_config, path_id2name):
+    def __init__(self, yaml_config):
         self.yaml_config = yaml_config
-        self.path_id2name = None
+        self.path_id2name = self.yaml_config.get_id2name_path()
         self.mesh_objects = None
         self.scene_collection = {}
 
@@ -23,17 +19,13 @@ class SceneInitializer(object):
             utils.path_utils.get_path_blender_scene(self.yaml_config.get_scene()))
         self.iterate_through_yaml_obj(self.yaml_config.get_path_to_object_source())
         bproc.camera.set_resolution(640, 480)
-        self._set_category_id(path_to_json=self.get_path_to_id2name(), obj_list=self.get_objects2annotate())
+        self._set_category_id(path_to_json=self.path_id2name, obj_list=self.get_objects2annotate())
         self.scene_collection.update({'Room': self._create_room_from_mesh_objects()})
         self.scene_collection.update({'Tables': self._create_table_from_mesh_objects()})
         self.scene_collection.update({'Shelves': self._create_shelves_from_mesh_objects()})
 
     def get_scene_collection(self):
         return self.scene_collection
-
-    def get_path_to_id2name(self):
-        path = self.yaml_config.get_id2name_path()
-        return path
 
     def get_objects2annotate(self):
         object_names = self.yaml_config.get_objects()
@@ -45,6 +37,16 @@ class SceneInitializer(object):
 
     def get_all_mesh_objects(self):
         return self.mesh_objects
+
+    def get_all_mesh_objects_id2name(self):
+        objects_id2name = []
+        with open(self.yaml_config.get_id2name_path()) as json_file:
+            data = json.load(json_file)
+            names = data.values()
+            for name in names:
+                objects_id2name.extend(self._get_mesh_objects_by_name(name))
+
+        return objects_id2name
 
     def check_if_object_is_in_scene(self, obj):
         found = False
@@ -83,30 +85,20 @@ class SceneInitializer(object):
 
     def _create_room_from_mesh_objects(self):
         walls = self._get_mesh_objects_by_name("Walls")
-        floor = self._get_mesh_objects_by_name("Floor")
-        baseboard = self._get_mesh_objects_by_name("Baseboard")
 
         res = []
-        for wall, floor, baseboard in zip(walls, floor, baseboard):
-            room = suturo_blenderproc.types.room.Room()
+        for wall in walls:
+            room = types.room.Room()
 
-            wall_object = suturo_blenderproc.types.room.Walls()
+            wall_object = types.room.Walls()
             wall_object.mesh_object = wall
 
             bbox, height, center_point = utils.math_utils.compute_bbox_properties(wall)
+            wall_object.bbox = bbox
             wall_object.height = height
             wall_object.center = center_point
 
-            wall_object.bbox = np.array(bbox)
-            floor_object = suturo_blenderproc.types.room.Floor()
-            floor_object.mesh_object = floor
-
-            baseboard_object = suturo_blenderproc.types.room.Baseboard()
-            baseboard_object.mesh_object = baseboard
-
             room.walls = wall_object
-            room.floor = floor_object
-            room.baseboard = baseboard_object
             res.append(room)
         return res
 
@@ -118,8 +110,8 @@ class SceneInitializer(object):
             bbox, height, center_point = utils.math_utils.compute_bbox_properties(mesh_object)
 
             if object_type == "Table":
-                table = suturo_blenderproc.types.table.Table()
-                table_surface = suturo_blenderproc.types.table.TableSurface()
+                table = types.table.Table()
+                table_surface = types.table.TableSurface()
                 table_surface.bbox = bbox
                 table_surface.height = height
                 table_surface.center = center_point
@@ -127,11 +119,11 @@ class SceneInitializer(object):
                 print(mesh_object.get_name())
                 for sibling in siblings:
                     if "tablelegs" in sibling.get_name().lower():
-                        table_legs = suturo_blenderproc.types.table.TableLegs()
+                        table_legs = types.table.TableLegs()
                         table_legs.mesh_object = sibling
                         table.table_legs = table_legs
                     if "chair" in sibling.get_name().lower():
-                        table_chair = suturo_blenderproc.types.table.TableChairs()
+                        table_chair = types.table.TableChairs()
                         table_chair.mesh_object = sibling
                         table.table_chairs = table_chair
 
@@ -139,7 +131,7 @@ class SceneInitializer(object):
                 res.append(table)
 
             if object_type == "Shelf":
-                shelf = suturo_blenderproc.types.shelf.Shelf()
+                shelf = types.shelf.Shelf()
                 shelf.bbox = bbox
                 shelf.center = center_point
                 shelf.height = height
@@ -149,7 +141,7 @@ class SceneInitializer(object):
                     if "shelffloor" in sibling.get_name().lower():
                         bbox, height, center_point = utils.math_utils.compute_bbox_properties(
                             sibling)
-                        shelf_floor = suturo_blenderproc.types.shelf.ShelfFloor()
+                        shelf_floor = types.shelf.ShelfFloor()
                         shelf_floor.bbox = bbox
                         shelf_floor.shelf = shelf
                         shelf_floor.mesh_object = sibling

@@ -3,21 +3,21 @@ from typing import Union, Optional
 import blenderproc as bproc
 import numpy as np
 
+import suturo_blenderproc.types as types
+import suturo_blenderproc.utils as utils
+
+import suturo_blenderproc.types.room
+import suturo_blenderproc.types.entity
 import suturo_blenderproc.types.table
 import suturo_blenderproc.types.shelf
-import suturo_blenderproc.types.entity
-import suturo_blenderproc.types.room
-
-import utils.math_utils
-import utils.blenderproc_utils
 
 
 def extract_surfaces_from_furnitures(furnitures):
     extracted_surfaces = []
     for furniture in furnitures:
-        if isinstance(furniture, suturo_blenderproc.types.table.Table):
+        if isinstance(furniture, types.table.Table):
             extracted_surfaces.append(furniture.table_surface)
-        elif isinstance(furniture, suturo_blenderproc.types.shelf.Shelf):
+        elif isinstance(furniture, types.shelf.Shelf):
             for shelf_floor in furniture.shelf_floors:
                 extracted_surfaces.append(shelf_floor)
         else:
@@ -27,11 +27,14 @@ def extract_surfaces_from_furnitures(furnitures):
 
 
 class CameraPoseSampler:
-    def __init__(self, room: suturo_blenderproc.types.room.Room):
+    def __init__(self, room: types.room.Room):
         self.room = room
 
     def is_position_out_of_bounds(self, position):
         bbox = self.room.walls.bbox
+        if np.min(bbox) == 0 and np.max(bbox) == 0:
+            raise ValueError(f"Bounding Box of '{self.room.walls.mesh_object.get_name()}' is not set properly, "
+                             f"this might occur when the room is not properly initialized")
         return np.any(np.greater(position, np.max(bbox, axis=0))) \
                or np.any(np.less(position, np.min(bbox, axis=0)))
 
@@ -51,7 +54,7 @@ class CameraPoseSampler:
         for camera_position in camera_positions:
             self.build_camera_pose(camera_position, poi)
 
-    def sample_circular_camera_poses_table(self, table_surface: suturo_blenderproc.types.table.TableSurface,
+    def sample_circular_camera_poses_table(self, table_surface: types.table.TableSurface,
                                            num_poses: int = 1, radius: float = 1.5,
                                            height: float = 1.3) -> None:
 
@@ -63,12 +66,12 @@ class CameraPoseSampler:
                 step += 1
 
     def sample_circular_camera_poses_shelf(self, shelf_or_shelf_floor: Union[
-        suturo_blenderproc.types.shelf.Shelf, suturo_blenderproc.types.shelf.ShelfFloor] = None,
+        types.shelf.Shelf, types.shelf.ShelfFloor] = None,
                                            num_poses: int = 1, radius: float = 1.5,
                                            height: float = 1.3) -> None:
 
         shelf = shelf_or_shelf_floor
-        if isinstance(shelf, list) and isinstance(shelf[0], suturo_blenderproc.types.shelf.ShelfFloor):
+        if isinstance(shelf, list) and isinstance(shelf[0], types.shelf.ShelfFloor):
             shelf = shelf[0].shelf
 
         step = 0
@@ -83,12 +86,11 @@ class CameraPoseSampler:
             if self.build_camera_pose(camera_position, bproc.object.compute_poi([shelf.mesh_object])):
                 step += 1
 
-    def sample_circular_camera_poses_list(self, surfaces: [suturo_blenderproc.types.entity.Entity], num_poses: int = 1,
+    def sample_circular_camera_poses_list(self, surfaces: [types.entity.Entity], num_poses: int = 1,
                                           radius: float = 1.5,
                                           height: float = 1.3) -> None:
         for surface in surfaces:
-            if isinstance(surface, suturo_blenderproc.types.shelf.Shelf) or isinstance(surface,
-                                                                                       suturo_blenderproc.types.shelf.ShelfFloor):
+            if isinstance(surface, types.shelf.Shelf) or isinstance(surface, types.shelf.ShelfFloor):
                 self.sample_circular_camera_poses_shelf(shelf_or_shelf_floor=surface.shelf, num_poses=num_poses,
                                                         radius=radius, height=height)
 
@@ -98,7 +100,7 @@ class CameraPoseSampler:
 
 
 class ObjectPoseSampler:
-    def __init__(self, furnitures: [suturo_blenderproc.types.entity.Entity], std: Optional[float] = 0):
+    def __init__(self, furnitures: [types.entity.Entity], std: Optional[float] = 0):
         self.surfaces = extract_surfaces_from_furnitures(furnitures)
         self.current_surface = 0
         self.std = std
@@ -128,7 +130,7 @@ class ObjectPoseSampler:
     def get_len_surfaces(self) -> int:
         return len(self.surfaces)
 
-    def get_current_surface(self) -> suturo_blenderproc.types.entity.Entity:
+    def get_current_surface(self) -> types.entity.Entity:
         return self.surfaces[self.current_surface]
 
     def next_surface_same_parent(self) -> bool:
@@ -145,21 +147,21 @@ class ObjectPoseSampler:
 
 
 class LightPoseSampler:
-    def __init__(self, room: suturo_blenderproc.types.room.Room):
+    def __init__(self, room: types.room.Room):
         self.room = room
 
-    def sample_light_for_furniture(self, surface: suturo_blenderproc.types.entity.Entity,
+    def sample_light_for_furniture(self, surface: types.entity.Entity,
                                    strength: float) -> bproc.types.Light:
         center = surface.center
         height = self.room.walls.height - 0.6
         light = bproc.types.Light()
 
-        if isinstance(surface, suturo_blenderproc.types.table.TableSurface):
+        if isinstance(surface, types.table.TableSurface):
             light.set_location(np.append(center[:2], height))
             light.set_energy(strength)
 
-        if isinstance(surface, suturo_blenderproc.types.shelf.ShelfFloor) \
-                or isinstance(surface, suturo_blenderproc.types.shelf.Shelf):
+        if isinstance(surface, types.shelf.ShelfFloor) \
+                or isinstance(surface, types.shelf.Shelf):
             euler_z = surface.mesh_object.get_rotation_euler()[2]
             if isinstance(surface.mesh_object.get_parent(), bproc.types.Entity):
                 euler_z = surface.mesh_object.get_parent().get_rotation_euler()[2]
