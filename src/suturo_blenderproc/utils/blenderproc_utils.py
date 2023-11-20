@@ -2,6 +2,7 @@ import blenderproc as bproc
 import numpy as np
 
 import suturo_blenderproc.utils.yaml_config
+import suturo_blenderproc.types as types
 
 
 def hide_mesh_objects(mesh_objects: [bproc.types.MeshObject], render: bool):
@@ -9,7 +10,16 @@ def hide_mesh_objects(mesh_objects: [bproc.types.MeshObject], render: bool):
         mesh_object.blender_obj.hide_render = render
 
 
-def randomize_materials(mesh_objects: [bproc.types.MeshObject]):
+def randomize_materials(furnitures: [suturo_blenderproc.types.entity.Entity]):
+    mesh_objects = []
+    for furniture in furnitures:
+        if isinstance(furniture, types.table.Table):
+            mesh_objects.extend(furniture.get_mesh_objects_from_table())
+        elif isinstance(furniture, types.shelf.Shelf):
+            mesh_objects.extend(furniture.get_mesh_objects_from_shelf())
+        elif isinstance(furniture, types.room.Room):
+            mesh_objects.extend(furniture.get_mesh_objects_from_room())
+
     for furniture in mesh_objects:
         furniture.set_material(0, np.random.choice(furniture.get_materials()))
 

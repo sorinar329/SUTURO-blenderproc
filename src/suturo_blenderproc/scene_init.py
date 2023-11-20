@@ -85,7 +85,7 @@ class SceneInitializer(object):
 
     def _create_room_from_mesh_objects(self):
         walls = self._get_mesh_objects_by_name("Walls")
-
+        floors = self._get_mesh_objects_by_name("Floor")
         res = []
         for wall in walls:
             room = types.room.Room()
@@ -99,6 +99,14 @@ class SceneInitializer(object):
             wall_object.center = center_point
 
             room.walls = wall_object
+            res.append(room)
+        for floor in floors:
+            room = types.room.Room()
+
+            floor_object = types.room.Floor
+            floor_object.mesh_object = floor
+
+            room.floor = floor_object
             res.append(room)
         return res
 

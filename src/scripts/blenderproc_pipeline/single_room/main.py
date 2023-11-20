@@ -28,13 +28,9 @@ config = yaml_config.YAMLConfig(filename=args.config_yaml)
 
 def deploy_scene(x: int, scene_initializer: suturo_blenderproc.scene_init.SceneInitializer, logger: Logger):
     hide_mesh_objects(scene_initializer.get_all_mesh_objects_id2name(), True)
-
     objects = scene_initializer.get_objects2annotate()
     objects = duplicate_objects(objects, config)
     scene_collection = scene_initializer.get_scene_collection()
-    for table in scene_collection.get("Tables"):
-        hide_mesh_objects(table.get_mesh_objects_from_table(), False)
-
     room = scene_collection.get("Room")[0]
     num_partitions = -(len(objects) // -4)
     object_partitioner = ObjectPartition(num_partitions=num_partitions, objects=objects)
@@ -52,7 +48,8 @@ def deploy_scene(x: int, scene_initializer: suturo_blenderproc.scene_init.SceneI
     partition_indices = []
 
     for i in range(x):
-        # utils.blenderproc_utils.randomize_materials(furnitures)
+        suturo_blenderproc.utils.blenderproc_utils.randomize_materials(
+            furnitures=scene_collection.get("Shelves") + scene_collection.get("Tables") + scene_collection.get("Room"))
         lights_strength = np.random.choice([10, 30, 40, 50, 100])
         radius = np.random.choice(np.linspace(start=1.6, stop=2.2, num=20))
         height = np.random.choice(np.linspace(start=1.4, stop=1.8, num=8))
@@ -107,10 +104,12 @@ def pipeline():
     logger = Logger()
     args = scripts.argparser.get_argparse()
     config = suturo_blenderproc.utils.yaml_config.YAMLConfig(filename=args.config_yaml)
-
     scene_initializer = suturo_blenderproc.scene_init.SceneInitializer(yaml_config=config)
-
     scene_initializer.initialize_scene()
+    for obj in scene_initializer.get_all_mesh_objects_id2name():
+        print(obj.get_bound_box())
+    os.abort()
+
     deploy_scene(config.get_number_of_iterations(), scene_initializer, logger)
 
     if config.get_yolo_training():
