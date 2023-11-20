@@ -8,7 +8,7 @@ This method should ease the process of acquiring annotated data in a high amount
 ## Camera Sampling
 - POI, Rotation, Position, bla bla bla, ToDo: Naser
 # Install
-This framework was tested on Ubuntu 20.04
+This framework was tested on Ubuntu 20.04 with Blender 3.2
 
 ## Set Up Workspace
 In order to run the framework, you need to create a new directory and clone two repositories into it, both repos has to be in the same directory.
