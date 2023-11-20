@@ -16,7 +16,7 @@ def randomize_materials(furnitures: [suturo_blenderproc.types.entity.Entity]):
         if isinstance(furniture, types.table.Table):
             mesh_objects.extend(furniture.get_mesh_objects_from_table())
         elif isinstance(furniture, types.shelf.Shelf):
-            mesh_objects.extend(furniture.get_mesh_objects_from_shelf())
+            mesh_objects.extend(furniture.mesh_object)
         elif isinstance(furniture, types.room.Room):
             mesh_objects.extend(furniture.get_mesh_objects_from_room())
 
