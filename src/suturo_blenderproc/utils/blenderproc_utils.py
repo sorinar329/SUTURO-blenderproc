@@ -16,12 +16,15 @@ def randomize_materials(furnitures: [suturo_blenderproc.types.entity.Entity]):
         if isinstance(furniture, types.table.Table):
             mesh_objects.extend(furniture.get_mesh_objects_from_table())
         elif isinstance(furniture, types.shelf.Shelf):
-            mesh_objects.extend(furniture.mesh_object)
+            mesh_objects.append(furniture.mesh_object)
         elif isinstance(furniture, types.room.Room):
             mesh_objects.extend(furniture.get_mesh_objects_from_room())
 
     for furniture in mesh_objects:
         furniture.set_material(0, np.random.choice(furniture.get_materials()))
+        print(furniture.get_name())
+        for mat in furniture.get_materials():
+            print(mat.get_name())
 
 
 def set_random_rotation_euler_zaxis(mesh_object: bproc.types.MeshObject):
