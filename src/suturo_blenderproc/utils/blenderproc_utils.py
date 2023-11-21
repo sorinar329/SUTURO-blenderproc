@@ -10,8 +10,11 @@ def hide_mesh_objects(mesh_objects: [bproc.types.MeshObject], render: bool):
         mesh_object.blender_obj.hide_render = render
 
 
+# Method to randomize materials of given objects in a scene. The materials are taken from the scene itself,
+# as every object can have multiple materials, while only having one active
 def randomize_materials(furnitures: [suturo_blenderproc.types.entity.Entity]):
     mesh_objects = []
+    # Create a list of all objects, where the material should be swapped.
     for furniture in furnitures:
         if isinstance(furniture, types.table.Table):
             mesh_objects.extend(furniture.get_mesh_objects_from_table())
@@ -20,11 +23,11 @@ def randomize_materials(furnitures: [suturo_blenderproc.types.entity.Entity]):
         elif isinstance(furniture, types.room.Room):
             mesh_objects.extend(furniture.get_mesh_objects_from_room())
 
+    # The material on index 0, is the material that is actively showing on the object. This is randomly set from a
+    # list of materials of the given object
     for furniture in mesh_objects:
         furniture.set_material(0, np.random.choice(furniture.get_materials()))
-        print(furniture.get_name())
-        for mat in furniture.get_materials():
-            print(mat.get_name())
+
 
 
 def set_random_rotation_euler_zaxis(mesh_object: bproc.types.MeshObject):

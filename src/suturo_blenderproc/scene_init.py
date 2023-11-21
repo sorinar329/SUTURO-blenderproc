@@ -56,24 +56,35 @@ class SceneInitializer(object):
                 break
         return found
 
+    # Method that returns the path to an object which is not in the scene, but can be found in the objects folder.
     def get_path_to_obj(self, obj, path_to_source):
         blenderproc_path_objects = path_to_source
         obj_path = blenderproc_path_objects + str(obj) + ".glb"
         return obj_path
 
+    # Method to actually import objects that are not already in the scene,
+    # by checking if there are objects in the object list, which contains the objects that should
+    # be included and annotated and are not in the scene. These objects should then be located in the objects folder
     def iterate_through_yaml_obj(self, path_to_source):
         list_of_new_objects = []
         for obj in self.yaml_config.get_objects():
+            # Check if the object is already in the scene
             if self.check_if_object_is_in_scene(obj):
                 continue
             else:
+                # If the object is not in the scene, the object will be imported into the scene from the objects'
+                # folder.
                 path_to_obj = self.get_path_to_obj(obj, path_to_source)
                 new_obj = bproc.loader.load_obj(path_to_obj)
+                # The origin of the object will be moved to the bottom, that makes it simpler to place the object on
+                # surfaces.
                 new_obj[0].move_origin_to_bottom_mean_point()
+                # The name of the new object will be set, that is important for the annotations.
                 new_obj[0].set_name(str(obj))
                 list_of_new_objects.append(new_obj[0])
         self.mesh_objects.extend(list_of_new_objects)
 
+    # Set the category id of objects according to the given id from the id2namejson.
     def _set_category_id(self, path_to_json, obj_list):
         with open(path_to_json) as json_file:
             data = json.load(json_file)
