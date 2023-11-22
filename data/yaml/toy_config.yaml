@@ -1,8 +1,10 @@
 # Name of the blender scene located at /suturo-blenderproc_data/scenes/
-scene: "storing_groceries2"
+scene: "arena"
 
 # Name of objects which should be rendered and annotated in the scene, must be identical to classnames of id2name
-objects: [ "Cerealbox", "Pear", "Orange", "Sugarbox", "Crackerbox", "Bleachcleanserbottle", "Apple", "Tunafishcan"]
+objects: ["Milkbottle", "Winebottle", "Minisoccerball", "Tropicaljuicebottle", "Colacan", "Sugarbox",
+          "Crackerbox", "Bleachcleanserbottle", "Apple", "Tunafishcan", "Pottedmeatcan", "Pear", "Spoon", "Bowl",
+          "Banana", "Lemon", "Softball"]
 
 # You can duplicate objects by a factor; for example, setting it to 3 would triple the number of objects.
 # Additionally, you can specify how many times a specific object should be duplicated.
@@ -13,42 +15,28 @@ duplicate_objects: 3
 #duplicate_objects: {"Cerealbox.001:3"}
 
 # For imports specify a path to objects source for example somePath/suturo-blenderproc_data/objects/
-obj_source: "somePath/suturo-blenderproc_data/objects/"
+obj_source: "/home/sorin/workspace/SUTURO-blenderproc/suturo-blenderproc_data/objects/"
 
 # Number of camera poses created in each iteration
 number_of_camera_poses: 10
 
 # Number of iterations of the blenderproc pipeline
-number_of_iterations: 10
+number_of_iterations: 200
 
 # Path to id2name for example could be located at somePath/SUTURO-blenderproc/data/json/id2name.json
-path_to_id2name: "somePath/SUTURO-blenderproc/data/json/id2name.json"
+path_to_id2name: "/home/sorin/workspace/SUTURO-blenderproc/SUTURO-blenderproc/data/json/id2name.json"
 
-lighting_strength: 50 #Randomized or fixed?
+# Path to the folder you want to save the created synthetic data.
+output_path: "/home/sorin/workspace/SUTURO-blenderproc/SUTURO-blenderproc/output"
 
-output_path: "/home/naser/workspace/SUTURO/SUTURO_WSS/SUTURO-Blenderproc/SUTURO-blenderproc/output"
+# Set if a yolo dataset should be created from the generated data
+yolo_create_dataset: True
 
-yolo_train: False
+yolo_save_path: "/home/sorin/workspace/SUTURO-blenderproc/SUTURO-blenderproc/yolo_set"
 
-yolo_save_path: "/home/sorin/code/SUTURO-blenderproc/SUTURO-blenderproc/yolo_set"
-
+# If you already have an existing dataset in yolo format, you can combine it with the newly created one by setting this
+# parameter True. The data.yaml will consist of the classes from the newest created dataset
 combine_with_existing_dataset: False
 
 path_to_dataset_that_has_to_be_combined: "path"
-
-position_of_interest: [ 4.64598, -3.2758, 0.8 ]
-
-camera_positions:
-  #first: [ 4.33, -3.195, 1.6 ]
-  #second: [ 5.397, -4.45, 1.6 ]
-  #third: [ 5.397, -2.05, 1.6 ]
-  #fourth: [ 4.13, -4.195, 1.6 ]
-  #fifth: [ 4.03, -4.295, 1.6 ]
-  #sixth: [ 5.40737, -3.2758, 3 ]
-  #seventh: [ 5.40737, -2.9758, 3 ]
-  #eigth: [ 5.40737, -2.6758, 3 ]
-  #ninth: [ 5.10737, -3.6758, 3 ]
-  #tenth: [ 4.80737, -3.6758, 3 ]
-  eleventh: [ 4.50737, -3.6758, 2 ]
-  #twelvth: [ 4.2, -2.6, 1.6 ]
 

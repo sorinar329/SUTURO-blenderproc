@@ -20,6 +20,7 @@ def extract_surfaces_from_furnitures(furnitures):
         elif isinstance(furniture, types.shelf.Shelf):
             for shelf_floor in furniture.shelf_floors:
                 extracted_surfaces.append(shelf_floor)
+
         else:
             continue
 
@@ -35,7 +36,7 @@ class CameraPoseSampler:
         if np.min(bbox) == 0 and np.max(bbox) == 0:
             raise ValueError(f"Bounding Box of '{self.room.walls.mesh_object.get_name()}' is not set properly, "
                              f"this might occur when the room is not properly initialized")
-        return np.any(np.greater(position, np.max(bbox, axis=0))) \
+        return np.any(np.greater(position[0:2], np.max(bbox,axis=0)[0:2])) \
                or np.any(np.less(position, np.min(bbox, axis=0)))
 
     def build_camera_pose(self, camera_position, poi) -> bool:
@@ -116,6 +117,8 @@ class ObjectPoseSampler:
         object_pose = np.random.uniform(lower_bound, upper_bound)
         obj.set_location(object_pose)
         utils.blenderproc_utils.set_random_rotation_euler_zaxis(obj)
+        print(bbox)
+        print(height)
 
     def sample_object_pose_gaussian(self, obj: bproc.types.MeshObject) -> None:
         surface = self.surfaces[self.current_surface]
@@ -153,7 +156,7 @@ class LightPoseSampler:
     def sample_light_for_furniture(self, surface: types.entity.Entity,
                                    strength: float) -> bproc.types.Light:
         center = surface.center
-        height = self.room.walls.height - 0.6
+        height = 2
         light = bproc.types.Light()
 
         if isinstance(surface, types.table.TableSurface):
@@ -166,9 +169,9 @@ class LightPoseSampler:
             if isinstance(surface.mesh_object.get_parent(), bproc.types.Entity):
                 euler_z = surface.mesh_object.get_parent().get_rotation_euler()[2]
             deg_z = np.rad2deg(euler_z) - 90
-            lights_position = utils.math_utils.position_2D_circle(angle=deg_z, radius=0.8, center=center, height=height)
+            lights_position = utils.math_utils.position_2D_circle(angle=deg_z, radius=0.8, center=center, height=2)
 
             light.set_location(lights_position)
-            light.set_energy(strength)
+            light.set_energy(100)
 
         return light

@@ -76,13 +76,29 @@ def convert_coco_to_yolo(path_to_coco_annotation, new_dir, j=0):
             i = i + 1
 
 
-#Moves the images from an old directory to the target directory
+def filter_matching_files(folder_images, folder_annotations):
+    txt_files = [file.split('.')[0] for file in os.listdir(folder_annotations) if file.endswith('.txt')]
+    jpg_files = [file.split('.')[0] for file in os.listdir(folder_images) if file.endswith('.jpg')]
+
+    common_prefixes = set(txt_files) & set(jpg_files)
+
+    for file in os.listdir(folder_annotations):
+        prefix = file.split('.')[0]
+        if prefix not in common_prefixes:
+            os.remove(os.path.join(folder_annotations, file))
+
+    for file in os.listdir(folder_images):
+        prefix = file.split('.')[0]
+        if prefix not in common_prefixes:
+            os.remove(os.path.join(folder_images, file))
+
+
+# Moves the images from an old directory to the target directory
 def move_images_to_new_dir(old_dir, new_dir):
     os.makedirs(new_dir + "/images")
     for item in sorted(os.listdir(old_dir)):
         shutil.copy(old_dir + item, new_dir + "/images/" + item)
     os.remove(new_dir + "/images/" + sorted(os.listdir(new_dir + "/images"))[len(sorted(os.listdir(old_dir))) - 1])
-
 
 
 def move_files_to_folder(list_of_files, destination_folder):
@@ -93,7 +109,7 @@ def move_files_to_folder(list_of_files, destination_folder):
             assert False
 
 
-#Splits the dataset into Train/Validation/Test subsets
+# Splits the dataset into Train/Validation/Test subsets
 def trainsplit(path_source):
     os.makedirs(path_source + "train/images")
     os.makedirs(path_source + "val/images")
@@ -109,10 +125,12 @@ def trainsplit(path_source):
     annotations.sort()
 
     # Split the dataset into train-valid-test splits
-    train_images, val_images, train_annotations, val_annotations = train_test_split(images, annotations, test_size=0.1, train_size=0.8,
+    train_images, val_images, train_annotations, val_annotations = train_test_split(images, annotations, test_size=0.1,
+
                                                                                     random_state=1)
     val_images, test_images, val_annotations, test_annotations = train_test_split(val_images, val_annotations,
-                                                                                  train_size=0.8,test_size=0.1, random_state=1)
+                                                                                  test_size=0.1,
+                                                                                  random_state=1)
 
     move_files_to_folder(train_images, path_source + "train/images")
     move_files_to_folder(val_images, path_source + "val/images")
@@ -144,5 +162,6 @@ def create_yolo_dataset(id2name_json, coco_annotations, old_dir, new_dir):
     convert_coco_to_yolo(coco_annotations, new_dir)
     move_images_to_new_dir(old_dir, new_dir)
     rename_images(path_to_new_dir=new_dir + "/images/", i=0)
+    filter_matching_files(new_dir + "/images/", new_dir + "/labels/")
     trainsplit(new_dir + "/")
     write_data_yaml(id2name_json, new_dir)
