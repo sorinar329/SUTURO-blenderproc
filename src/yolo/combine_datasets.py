@@ -1,9 +1,29 @@
 import os
-from natsort import natsorted
+# from natsort import natsorted
 import os
 import shutil
-from annotations.convert_to_yolo import create_list_from_categories
+from yolo.annotations.convert_to_yolo import create_list_from_categories
 
+import re
+
+
+# Key function for sorting
+def natural_sort_key(filename):
+    return [int(text) if text.isdigit() else text.lower() for text in re.split(r'(\d+)', filename)]
+
+
+# Sort the files in the given folder naturally
+def sort_files_naturally(folder_path):
+    if not os.path.isdir(folder_path):
+        raise ValueError(f"The provided path '{folder_path}' is not a valid directory.")
+
+    files = [file for file in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, file))]
+    sorted_files = sorted(files, key=natural_sort_key)
+
+    return sorted_files
+
+
+# Creates a new directory for the combined dataset
 def create_new_dir(parent_dir, name):
     new_dir = os.path.join(parent_dir + name)
     try:
@@ -19,8 +39,10 @@ def create_new_dir(parent_dir, name):
     os.mkdir(new_dir + "/val/labels")
 
 
+# Rename the images, to avoid problems, where two datasets contain files with the same name
 def rename_images(path, i=0):
-    data = natsorted(os.listdir(path))
+    print(path)
+    data = sort_files_naturally(path)
 
     for d in data:
         os.rename(path + d,
@@ -28,14 +50,17 @@ def rename_images(path, i=0):
         i = i + 1
 
 
+# Rename the labels, to avoid problems, where two datasets contain files with the same name
 def rename_labels(path, i=0):
-    data = natsorted(os.listdir(path))
+    data = sort_files_naturally(path)
     for d in data:
         os.rename(path + d,
                   path + "image" + str(i) + ".txt")
         i = i + 1
 
 
+# Combining the given datasets, creating new subfolders for the train/val files, as well as the data which
+# are important for the data.yaml.
 def combine_datasets(first, second, parent_dir, name, path_to_json_for_id):
     t1 = 0
     t2 = 0
@@ -48,7 +73,7 @@ def combine_datasets(first, second, parent_dir, name, path_to_json_for_id):
     obj_list = create_list_from_categories(path_to_json_for_id)
 
     f = open(new_folder + "/data.yaml", "w+")
-    f.write("train: " +  str(new_folder + "/train/images \n"))
+    f.write("train: " + str(new_folder + "/train/images \n"))
     f.write("val: " + str(new_folder + "/val/images \n"))
     f.write("nc: " + str(len(obj_list)) + "\n")
     f.write("names: " + str(obj_list))
@@ -64,8 +89,6 @@ def combine_datasets(first, second, parent_dir, name, path_to_json_for_id):
         v1 = v1 + len(os.listdir(first + "/val/images"))
         index1 = index1 + len(os.listdir(first + "/val/images"))
 
-
-
     if "val" in os.listdir(second):
         v2 = v1 + len(os.listdir(second + "/val/images"))
         index2 = index2 + len(os.listdir(second + "/val/images"))
@@ -77,8 +100,6 @@ def combine_datasets(first, second, parent_dir, name, path_to_json_for_id):
     if "test" in os.listdir(second):
         v2 = v1 + len(os.listdir(second + "/test/images"))
         index2 = index2 + len(os.listdir(second + "/test/images"))
-
-
 
     for item in os.listdir(second + "/train/images"):
         shutil.copy(second + "/train/images/" + item, new_folder + "/train/images")

@@ -1,5 +1,5 @@
 # Name of the blender scene located at /suturo-blenderproc_data/scenes/
-scene: "arena"
+scene: "storing_groceries2"
 
 # Name of objects which should be rendered and annotated in the scene, must be identical to classnames of id2name
 objects: ["Milkbottle", "Winebottle", "Minisoccerball", "Tropicaljuicebottle", "Colacan", "Sugarbox",
@@ -21,7 +21,7 @@ obj_source: "/home/sorin/workspace/SUTURO-blenderproc/suturo-blenderproc_data/ob
 number_of_camera_poses: 10
 
 # Number of iterations of the blenderproc pipeline
-number_of_iterations: 200
+number_of_iterations: 10
 
 # Path to id2name for example could be located at somePath/SUTURO-blenderproc/data/json/id2name.json
 path_to_id2name: "/home/sorin/workspace/SUTURO-blenderproc/SUTURO-blenderproc/data/json/id2name.json"
@@ -32,11 +32,14 @@ output_path: "/home/sorin/workspace/SUTURO-blenderproc/SUTURO-blenderproc/output
 # Set if a yolo dataset should be created from the generated data
 yolo_create_dataset: True
 
-yolo_save_path: "/home/sorin/workspace/SUTURO-blenderproc/SUTURO-blenderproc/yolo_set"
+yolo_save_path: "/home/sorin/workspace/SUTURO-blenderproc/SUTURO-blenderproc/yolo_set2"
 
 # If you already have an existing dataset in yolo format, you can combine it with the newly created one by setting this
 # parameter True. The data.yaml will consist of the classes from the newest created dataset
-combine_with_existing_dataset: False
+combine_with_existing_dataset: True
 
-path_to_dataset_that_has_to_be_combined: "path"
 
+path_to_dataset_that_has_to_be_combined: "/home/sorin/workspace/SUTURO-blenderproc/SUTURO-blenderproc/yolo_set"
+
+
+save_path_of_combined_dataset: "/home/sorin/workspace/SUTURO-blenderproc/SUTURO-blenderproc/combined_yolo"

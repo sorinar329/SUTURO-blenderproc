@@ -42,7 +42,10 @@ class YAMLConfig(object):
         return self._data["number_of_camera_poses"]
 
     def get_yolo_training(self):
-        return self._data["yolo_train"]
+        return self._data["yolo_create_dataset"]
+
+    def get_combined_save_path(self):
+        return self._data["save_path_of_combined_dataset"]
 
     def get_lighting_strength(self):
         return self._data["lighting_strength"]
