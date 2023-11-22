@@ -7,6 +7,7 @@ while p.stem != "src":
     p = p.parent
 
 sys.path.append(str(p))
+from datetime import date
 from suturo_blenderproc.logger.logger import Logger
 import suturo_blenderproc.utils.yaml_config as yaml_config
 import suturo_blenderproc.scene_init
@@ -16,6 +17,7 @@ import scripts.argparser
 from suturo_blenderproc.sampler.object_partitions import ObjectPartition, PartitionType, validate_partitions
 import os
 from yolo.annotations.convert_to_yolo import create_yolo_dataset
+from yolo.combine_datasets import combine_datasets
 from suturo_blenderproc.utils.blenderproc_utils import hide_mesh_objects, duplicate_objects
 import blenderproc.python.types.MeshObjectUtility
 import numpy as np
@@ -48,11 +50,11 @@ def deploy_scene(x: int, scene_initializer: suturo_blenderproc.scene_init.SceneI
     partition_indices = []
 
     for i in range(x):
-        suturo_blenderproc.utils.blenderproc_utils.randomize_materials(
-            furnitures=scene_collection.get("Shelves") + scene_collection.get("Tables") + scene_collection.get("Room"))
+        #suturo_blenderproc.utils.blenderproc_utils.randomize_materials(
+        #    furnitures=scene_collection.get("Shelves") + scene_collection.get("Tables") + scene_collection.get("Room"))
         lights_strength = np.random.choice([10, 30, 40, 50, 100])
-        radius = np.random.choice(np.linspace(start=1.6, stop=2.2, num=20))
-        height = np.random.choice(np.linspace(start=1.4, stop=1.8, num=8))
+        radius = np.random.choice(np.linspace(start=1.2, stop=1.5, num=20))
+        height = np.random.choice(np.linspace(start=1.2, stop=1.4, num=8))
         if isinstance(surface, suturo_blenderproc.types.shelf.ShelfFloor):
             while object_pose_sampler.next_surface_same_parent():
                 object_pose_sampler.next_surface()
@@ -106,15 +108,16 @@ def pipeline():
     config = suturo_blenderproc.utils.yaml_config.YAMLConfig(filename=args.config_yaml)
     scene_initializer = suturo_blenderproc.scene_init.SceneInitializer(yaml_config=config)
     scene_initializer.initialize_scene()
-    for obj in scene_initializer.get_all_mesh_objects_id2name():
-        print(obj.get_bound_box())
-    os.abort()
 
     deploy_scene(config.get_number_of_iterations(), scene_initializer, logger)
 
     if config.get_yolo_training():
         create_yolo_dataset(config.get_id2name_path(), config.get_output_path() + "/coco_data/coco_annotations.json",
                             config.get_output_path() + "/coco_data/images/", config.get_yolo_save_path())
+
+    if config.get_combine_dataset():
+        combine_datasets(config.get_path_to_combine_dataset(), config.get_yolo_save_path(),
+                         config.get_combined_save_path(), str(date.today()), config.get_id2name_path())
 
 
 pipeline()
